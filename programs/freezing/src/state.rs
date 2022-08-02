@@ -1,25 +1,46 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
 
 const DESCRIMINATOR_LEN: usize = 8;
+
+pub const USER_INFO_SEED: &str = "user_info";
 
 #[account]
 #[derive(Default, Debug)]
 pub struct FreezingParams {
     // Administrator can call the admin only instructions
     pub admin: Pubkey,
-    pub mint_auth_bump: u8,
 
     pub ggwp_token: Pubkey,
     pub gpass_token: Pubkey,
 
     // Wallet for royalty
     pub accumulative_fund: Pubkey,
+    // Wallet for freezed GGWP
+    pub treasury: Pubkey,
+
+    pub gpass_mint_auth_bump: u8,
 }
 
 impl FreezingParams {
     pub const LEN: usize = DESCRIMINATOR_LEN +
         32 + // admin pk
-        8 + // bump
         32 + 32 + // tokens
-        32; // fund pk
+        32 + // fund pk
+        32 + // treasury pk
+        8; // bump
+}
+
+#[account]
+#[derive(Default, Debug)]
+pub struct UserInfo {
+    pub is_initialized: bool,
+    pub freezed_amount: u64,
+    pub last_getting_gpass: UnixTimestamp,
+}
+
+impl UserInfo {
+    pub const LEN: usize = DESCRIMINATOR_LEN +
+    1 + // is initialized
+    8 + // freezed amount
+    8; // last getting gpass
 }
