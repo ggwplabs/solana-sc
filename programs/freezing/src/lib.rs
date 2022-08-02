@@ -39,8 +39,10 @@ pub mod freezing {
         Ok(())
     }
 
+    /// Current admin can set another admin.
     pub fn change_admin(ctx: Context<ChangeAdmin>) -> Result<()> {
-        // TODO
+        let freezing_params = &mut ctx.accounts.freezing_params;
+        freezing_params.admin = ctx.accounts.new_admin.key();
         Ok(())
     }
 
@@ -49,13 +51,26 @@ pub mod freezing {
         Ok(())
     }
 
+    /// User freezes his amount of GGWP token to get the GPASS tokens.
     pub fn freeze(ctx: Context<Freeze>, amount: u64) -> Result<()> {
         // TODO
+        // pay current gpass earned
+        // freeze additional ggwp
         Ok(())
     }
 
+    /// In every time user can withdraw GPASS earned.
+    pub fn withdraw_gpass(ctx: Context<Withdraw>) -> Result<()> {
+        // TODO
+        // pay current gpass earned
+        Ok(())
+    }
+
+    // User unfreeze his amount of GGWP token.
     pub fn unfreeze(ctx: Context<Unfreeze>, amount: u64) -> Result<()> {
         // TODO
+        // pay current gpass earned
+        // unfreeze with conditions
         Ok(())
     }
 

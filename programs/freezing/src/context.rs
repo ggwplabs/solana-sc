@@ -40,13 +40,24 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ChangeAdmin {}
+pub struct ChangeAdmin<'info> {
+    pub admin: Signer<'info>,
+    #[account(mut,
+        constraint = freezing_params.admin == admin.key()
+        @ FreezingError::AccessDenied
+    )]
+    pub freezing_params: Account<'info, FreezingParams>,
+    pub new_admin: SystemAccount<'info>,
+}
 
 #[derive(Accounts)]
 pub struct ChangeParams {}
 
 #[derive(Accounts)]
 pub struct Freeze {}
+
+#[derive(Accounts)]
+pub struct Withdraw {}
 
 #[derive(Accounts)]
 pub struct Unfreeze {}
