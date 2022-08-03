@@ -25,7 +25,7 @@ impl Settings {
 #[derive(Default, Debug)]
 pub struct Wallet {
     pub amount: u64,
-    pub last_reset: UnixTimestamp,
+    pub last_burned: UnixTimestamp,
 }
 
 impl Wallet {

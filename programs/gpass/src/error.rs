@@ -15,6 +15,10 @@ pub enum GpassError {
     MaxMintersSizeExceeded, // 6002
     #[msg("Invalid burn period value")]
     InvalidBurnPeriodValue, // 6003
+    #[msg("Invalid mint authority")]
+    InvalidMintAuthority, // 6004
+    #[msg("Mint amount cannot be zero")]
+    ZeroMintAmount, // 6005
 
     // Functional errors
 }

@@ -11,11 +11,14 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
+// TODO: update params inst
+
 #[derive(Accounts)]
 pub struct CreateWallet<'info> {
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub user: Signer<'info>,
-    #[account(init, payer = user, space = Wallet::LEN,
+    #[account(init, payer = payer, space = Wallet::LEN,
         seeds = [
             USER_WALLET_SEED.as_bytes(),
             program_id.as_ref(),
@@ -26,4 +29,27 @@ pub struct CreateWallet<'info> {
     pub wallet: Account<'info, Wallet>,
     // Misc.
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MintTo<'info> {
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub to: Account<'info, Wallet>,
+    pub settings: Account<'info, Settings>,
+}
+
+#[derive(Accounts)]
+pub struct Burn<'info> {
+    pub user: SystemAccount<'info>,
+    #[account(mut,
+        seeds = [
+            USER_WALLET_SEED.as_bytes(),
+            program_id.as_ref(),
+            user.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub wallet: Account<'info, Wallet>,
+    pub settings: Account<'info, Settings>,
 }

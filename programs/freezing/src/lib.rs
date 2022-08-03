@@ -132,7 +132,7 @@ pub mod freezing {
             amount,
         )?;
 
-        user_info
+        user_info.freezed_amount = user_info
             .freezed_amount
             .checked_add(amount)
             .ok_or(FreezingError::Overflow)?;
