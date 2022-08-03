@@ -21,4 +21,6 @@ pub enum GpassError {
     ZeroMintAmount, // 6005
 
     // Functional errors
+    #[msg("Invalid last burned value")]
+    InvalidLastBurnedValue, // 6006
 }

@@ -11,7 +11,12 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// TODO: update params inst
+#[derive(Accounts)]
+pub struct UpdateParam<'info> {
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub settings: Account<'info, Settings>,
+}
 
 #[derive(Accounts)]
 pub struct CreateWallet<'info> {

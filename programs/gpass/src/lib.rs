@@ -2,11 +2,11 @@ use crate::context::*;
 use crate::error::GpassError;
 use crate::state::MAX_MINTERS;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
 
 mod context;
 mod error;
 mod state;
+mod utils;
 
 declare_id!("Gv9WAng6iPymaDwXMQrbsh2uTkDpAPTB89Ld4ctJejMG");
 
@@ -17,7 +17,8 @@ pub mod gpass {
     /// First time initialization of contract parameters.
     pub fn initialize(
         ctx: Context<Initialize>,
-        burn_period: UnixTimestamp,
+        burn_period: u64,
+        update_auth: Pubkey,
         minters: Vec<Pubkey>,
     ) -> Result<()> {
         require!(
@@ -28,7 +29,67 @@ pub mod gpass {
 
         let settings = &mut ctx.accounts.settings;
         settings.admin = ctx.accounts.admin.key();
+        settings.update_auth = update_auth;
         settings.burn_period = burn_period;
+        settings.minters = minters;
+
+        Ok(())
+    }
+
+    /// Current admin can set the new admin.
+    pub fn update_admin(ctx: Context<UpdateParam>, admin: Pubkey) -> Result<()> {
+        let authority = &ctx.accounts.authority;
+        let settings = &mut ctx.accounts.settings;
+
+        require_keys_eq!(authority.key(), settings.admin, GpassError::AccessDenied);
+        settings.admin = admin;
+
+        Ok(())
+    }
+
+    /// Admin cat set the new update authority
+    pub fn set_update_authority(ctx: Context<UpdateParam>, update_auth: Pubkey) -> Result<()> {
+        let authority = &ctx.accounts.authority;
+        let settings = &mut ctx.accounts.settings;
+
+        require_keys_eq!(authority.key(), settings.admin, GpassError::AccessDenied);
+        settings.update_auth = update_auth;
+
+        Ok(())
+    }
+
+    /// Update authority can set the new burn period value.
+    pub fn update_burn_period(ctx: Context<UpdateParam>, burn_period: u64) -> Result<()> {
+        let authority = &ctx.accounts.authority;
+        let settings = &mut ctx.accounts.settings;
+
+        require_keys_eq!(
+            authority.key(),
+            settings.update_auth,
+            GpassError::AccessDenied
+        );
+        require_neq!(burn_period, 0, GpassError::InvalidBurnPeriodValue);
+
+        settings.burn_period = burn_period;
+
+        Ok(())
+    }
+
+    /// Update authority can set the new minters list.
+    pub fn update_minters(ctx: Context<UpdateParam>, minters: Vec<Pubkey>) -> Result<()> {
+        let authority = &ctx.accounts.authority;
+        let settings = &mut ctx.accounts.settings;
+
+        require_keys_eq!(
+            authority.key(),
+            settings.update_auth,
+            GpassError::AccessDenied
+        );
+        require!(
+            minters.len() <= MAX_MINTERS,
+            GpassError::MaxMintersSizeExceeded
+        );
+
         settings.minters = minters;
 
         Ok(())
@@ -65,11 +126,7 @@ pub mod gpass {
         }
 
         // Try to burn amount before mint
-        let time_passed = clock
-            .unix_timestamp
-            .checked_sub(to.last_burned)
-            .ok_or(GpassError::Overflow)?;
-
+        let time_passed = utils::time_passed(clock.unix_timestamp, to.last_burned)?;
         if time_passed < settings.burn_period {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {
@@ -90,11 +147,7 @@ pub mod gpass {
         let wallet = &mut ctx.accounts.wallet;
         let clock = Clock::get()?;
 
-        let time_passed = clock
-            .unix_timestamp
-            .checked_sub(wallet.last_burned)
-            .ok_or(GpassError::Overflow)?;
-
+        let time_passed = utils::time_passed(clock.unix_timestamp, wallet.last_burned)?;
         if time_passed < settings.burn_period {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {

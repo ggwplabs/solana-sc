@@ -10,7 +10,8 @@ pub const USER_WALLET_SEED: &str = "user_gpass_wallet";
 #[derive(Default, Debug)]
 pub struct Settings {
     pub admin: Pubkey,
-    pub burn_period: UnixTimestamp,
+    pub update_auth: Pubkey,
+    pub burn_period: u64,
     pub minters: Vec<Pubkey>,
 }
 
