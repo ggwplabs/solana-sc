@@ -9,7 +9,7 @@ pub const USER_INFO_SEED: &str = "user_info";
 pub struct FreezingParams {
     // Administrator can call the admin only instructions
     pub admin: Pubkey,
-    // todo: pub update_auth: Pubkey,
+    pub update_auth: Pubkey,
 
     pub ggwp_token: Pubkey,
     pub gpass_token: Pubkey,
@@ -27,6 +27,7 @@ pub struct FreezingParams {
 impl FreezingParams {
     pub const LEN: usize = DESCRIMINATOR_LEN +
         32 + // admin pk
+        32 + // update auth pk
         32 + 32 + // tokens
         32 + // fund pk
         32 + // treasury pk

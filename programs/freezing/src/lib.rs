@@ -15,7 +15,7 @@ pub mod freezing {
     use super::*;
 
     /// Initialize new freezing params with tokens PKs.
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, update_auth: Pubkey) -> Result<()> {
         let freezing_params = &mut ctx.accounts.freezing_params;
 
         // Change GPASS mint authority to PDA
@@ -33,10 +33,16 @@ pub mod freezing {
         )?;
 
         freezing_params.admin = ctx.accounts.admin.key();
+        freezing_params.update_auth = update_auth;
+
         freezing_params.ggwp_token = ctx.accounts.ggwp_token.key();
         freezing_params.gpass_token = ctx.accounts.gpass_token.key();
+
         freezing_params.accumulative_fund = ctx.accounts.accumulative_fund.key();
         freezing_params.treasury = ctx.accounts.treasury.key();
+
+        // TODO: params
+
         freezing_params.gpass_mint_auth_bump = ctx.bumps["gpass_mint_auth"];
 
         Ok(())
@@ -46,6 +52,12 @@ pub mod freezing {
     pub fn change_admin(ctx: Context<ChangeAdmin>) -> Result<()> {
         let freezing_params = &mut ctx.accounts.freezing_params;
         freezing_params.admin = ctx.accounts.new_admin.key();
+        Ok(())
+    }
+
+    pub fn change_update_auth(ctx: Context<ChangeUpdateAuth>, update_auth: Pubkey) -> Result<()> {
+        let freezing_params = &mut ctx.accounts.freezing_params;
+        freezing_params.update_auth = update_auth;
         Ok(())
     }
 
@@ -68,6 +80,8 @@ pub mod freezing {
         let clock = Clock::get()?;
 
         require_neq!(amount, 0, FreezingError::ZeroFreezingAmount);
+
+        // TODO: fix freeze
 
         // Init user info in needed
         if !user_info.is_initialized {
@@ -209,8 +223,6 @@ pub mod freezing {
         if utils::is_withdraw_royalty(&clock, user_info.freezed_time)? {
             // TODO: get 15% royalty
         }
-
-
 
         Ok(())
     }

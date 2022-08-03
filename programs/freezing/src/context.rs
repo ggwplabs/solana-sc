@@ -57,7 +57,24 @@ pub struct ChangeAdmin<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ChangeParams {}
+pub struct ChangeUpdateAuth<'info> {
+    pub admin: Signer<'info>,
+    #[account(mut,
+        constraint = freezing_params.admin == admin.key()
+        @FreezingError::AccessDenied,
+    )]
+    pub freezing_params: Account<'info, FreezingParams>,
+}
+
+#[derive(Accounts)]
+pub struct ChangeParams<'info> {
+    pub update_auth: Signer<'info>,
+    #[account(mut,
+        constraint = freezing_params.update_auth == update_auth.key()
+        @FreezingError::AccessDenied,
+    )]
+    pub freezing_params: Account<'info, FreezingParams>,
+}
 
 #[derive(Accounts)]
 pub struct Freeze<'info> {
