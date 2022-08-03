@@ -163,4 +163,45 @@ pub struct Withdraw<'info> {
 }
 
 #[derive(Accounts)]
-pub struct Unfreeze {}
+pub struct Unfreeze<'info> {
+    pub user: Signer<'info>,
+    #[account(mut,
+        seeds = [
+            program_id.as_ref(),
+            freezing_params.key().as_ref(),
+            user.key().as_ref(),
+            USER_INFO_SEED.as_bytes(),
+        ],
+        bump,
+    )]
+    pub user_info: Account<'info, UserInfo>,
+
+    pub freezing_params: Account<'info, FreezingParams>,
+
+    #[account(mut,
+        constraint = gpass_token.key() == freezing_params.gpass_token,
+    )]
+    pub gpass_token: Account<'info, Mint>,
+
+    #[account(mut,
+        constraint = user_gpass_wallet.mint == freezing_params.gpass_token
+        @FreezingError::InvalidUserGPASSWalletMint,
+        constraint = user_gpass_wallet.owner == user.key()
+        @FreezingError::InvalidUserGPASSWalletOwner,
+    )]
+    pub user_gpass_wallet: Account<'info, TokenAccount>,
+
+    /// CHECK: Mint auth PDA
+    #[account(
+        seeds = [
+            program_id.as_ref(),
+            freezing_params.to_account_info().key.as_ref(),
+            gpass_mint_auth.key().as_ref()
+        ],
+        bump = freezing_params.gpass_mint_auth_bump,
+    )]
+    pub gpass_mint_auth: UncheckedAccount<'info>,
+
+    // Misc.
+    pub token_program: Program<'info, Token>,
+}

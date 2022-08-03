@@ -27,4 +27,10 @@ pub enum FreezingError {
     InvalidUserGPASSWalletOwner, // 6008
     #[msg("Invalid treasury pk")]
     InvalidTreasuryPK, // 6009
+
+    // Freezing errors
+    #[msg("Freezing amount cannot be zero")]
+    ZeroFreezingAmount, // 6010
+    #[msg("Unfreezing amount cannot be zero")]
+    ZeroUnfreezingAmount, // 6010
 }

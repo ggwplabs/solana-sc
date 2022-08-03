@@ -9,6 +9,7 @@ pub const USER_INFO_SEED: &str = "user_info";
 pub struct FreezingParams {
     // Administrator can call the admin only instructions
     pub admin: Pubkey,
+    // todo: pub update_auth: Pubkey,
 
     pub ggwp_token: Pubkey,
     pub gpass_token: Pubkey,
@@ -17,6 +18,8 @@ pub struct FreezingParams {
     pub accumulative_fund: Pubkey,
     // Wallet for freezed GGWP
     pub treasury: Pubkey,
+
+    // TODO: additional params
 
     pub gpass_mint_auth_bump: u8,
 }
@@ -35,6 +38,7 @@ impl FreezingParams {
 pub struct UserInfo {
     pub is_initialized: bool,
     pub freezed_amount: u64,
+    pub freezed_time: UnixTimestamp,
     pub last_getting_gpass: UnixTimestamp,
 }
 
@@ -42,5 +46,6 @@ impl UserInfo {
     pub const LEN: usize = DESCRIMINATOR_LEN +
     1 + // is initialized
     8 + // freezed amount
+    8 + // freezed time
     8; // last getting gpass
 }
