@@ -45,8 +45,8 @@ pub struct UserInfo {
 
 impl UserInfo {
     pub const LEN: usize = DESCRIMINATOR_LEN +
-    1 + // is initialized
-    8 + // freezed amount
-    8 + // freezed time
-    8; // last getting gpass
+        1 + // is initialized
+        8 + // freezed amount
+        8 + // freezed time
+        8; // last getting gpass
 }
