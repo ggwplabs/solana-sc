@@ -46,15 +46,15 @@ pub struct MintTo<'info> {
 
 #[derive(Accounts)]
 pub struct Burn<'info> {
-    pub user: SystemAccount<'info>,
-    #[account(mut,
-        seeds = [
-            USER_WALLET_SEED.as_bytes(),
-            program_id.as_ref(),
-            user.key().as_ref(),
-        ],
-        bump,
-    )]
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub from: Account<'info, Wallet>,
+    pub settings: Account<'info, Settings>,
+}
+
+#[derive(Accounts)]
+pub struct BurnInPeriod<'info> {
+    #[account(mut)]
     pub wallet: Account<'info, Wallet>,
     pub settings: Account<'info, Settings>,
 }

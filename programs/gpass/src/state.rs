@@ -3,6 +3,8 @@ use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
 const DESCRIMINATOR_LEN: usize = 8;
 pub const MAX_MINTERS: usize = 1;
 const MINTERS_LEN: usize = 1 + MAX_MINTERS * 32;
+pub const MAX_BURNERS: usize = 3;
+const BURNERS_LEN: usize = 1 + MAX_BURNERS * 32;
 
 pub const USER_WALLET_SEED: &str = "user_gpass_wallet";
 
@@ -13,13 +15,15 @@ pub struct Settings {
     pub update_auth: Pubkey,
     pub burn_period: u64,
     pub minters: Vec<Pubkey>,
+    pub burners: Vec<Pubkey>,
 }
 
 impl Settings {
     pub const LEN: usize = DESCRIMINATOR_LEN +
         8 + // admin pk
         8 + // burn period
-        MINTERS_LEN; // minters
+        MINTERS_LEN + // minters list
+        BURNERS_LEN; // burners list
 }
 
 #[account]

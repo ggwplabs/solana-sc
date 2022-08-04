@@ -13,14 +13,20 @@ pub enum GpassError {
     // Constraints
     #[msg("Max minters size exceeded")]
     MaxMintersSizeExceeded, // 6002
+    #[msg("Max burners size exceeded")]
+    MaxBurnersSizeExceeded, // 6003
     #[msg("Invalid burn period value")]
-    InvalidBurnPeriodValue, // 6003
+    InvalidBurnPeriodValue, // 6004
     #[msg("Invalid mint authority")]
-    InvalidMintAuthority, // 6004
+    InvalidMintAuthority, // 6005
+    #[msg("Invalid burn authority")]
+    InvalidBurnAuthority, // 6006
     #[msg("Mint amount cannot be zero")]
-    ZeroMintAmount, // 6005
+    ZeroMintAmount, // 6007
+    #[msg("Burn amount cannot be zero")]
+    ZeroBurnAmount, // 6008
 
     // Functional errors
     #[msg("Invalid last burned value")]
-    InvalidLastBurnedValue, // 6006
+    InvalidLastBurnedValue, // 6009
 }
