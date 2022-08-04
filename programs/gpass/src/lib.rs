@@ -15,6 +15,10 @@ pub mod gpass {
     use super::*;
 
     /// First time initialization of contract parameters.
+    /// burn_period - period in seconds.
+    /// update_auth - authority for update instructions.
+    /// minters - list of minters.
+    /// burners - list of burners.
     pub fn initialize(
         ctx: Context<Initialize>,
         burn_period: u64,
@@ -130,7 +134,7 @@ pub mod gpass {
         wallet.last_burned = clock.unix_timestamp;
 
         msg!(
-            "Wallet {} created. Last reset: {}",
+            "Wallet {} created. Last burned: {}",
             wallet.key(),
             wallet.last_burned
         );

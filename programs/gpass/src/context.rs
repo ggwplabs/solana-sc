@@ -22,7 +22,7 @@ pub struct UpdateParam<'info> {
 pub struct CreateWallet<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub user: Signer<'info>,
+    pub user: SystemAccount<'info>,
     #[account(init, payer = payer, space = Wallet::LEN,
         seeds = [
             USER_WALLET_SEED.as_bytes(),

@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
+// TODO: box it
+
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]

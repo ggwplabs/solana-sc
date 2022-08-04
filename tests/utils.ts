@@ -11,3 +11,18 @@ export async function airdropSol(conn: Connection, to: PublicKey, amount: number
         signature: airdropSignature,
     });
 }
+
+export function currentTimestamp(): number {
+    return Math.floor(Date.now() / 1000);
+}
+
+export function assertTimestamps(ts1: number, ts2: number, precision?: number): boolean {
+    if (precision) {
+        console.log(Math.floor(ts1 / precision));
+        console.log(Math.floor(ts2 / precision));
+        return Math.floor(ts1 / precision) == Math.floor(ts2 / precision);
+    }
+    else {
+        return ts1 == ts2;
+    }
+}
