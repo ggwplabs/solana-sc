@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
+use anchor_lang::prelude::*;
 
 const DESCRIMINATOR_LEN: usize = 8;
 
@@ -20,7 +20,6 @@ pub struct FreezingParams {
     pub treasury: Pubkey,
 
     // TODO: additional params
-
     pub gpass_mint_auth_bump: u8,
 }
 
@@ -39,8 +38,8 @@ impl FreezingParams {
 pub struct UserInfo {
     pub is_initialized: bool,
     pub freezed_amount: u64,
-    pub freezed_time: UnixTimestamp,
-    pub last_getting_gpass: UnixTimestamp,
+    pub freezed_time: i64,       // UnixTimestamp
+    pub last_getting_gpass: i64, // UnixTimestamp
 }
 
 impl UserInfo {

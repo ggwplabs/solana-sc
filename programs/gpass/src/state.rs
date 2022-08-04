@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
+use anchor_lang::prelude::*;
 
 const DESCRIMINATOR_LEN: usize = 8;
 pub const MAX_MINTERS: usize = 1;
@@ -20,7 +20,8 @@ pub struct Settings {
 
 impl Settings {
     pub const LEN: usize = DESCRIMINATOR_LEN +
-        8 + // admin pk
+        32 + // admin pk
+        32 + // update auth
         8 + // burn period
         MINTERS_LEN + // minters list
         BURNERS_LEN; // burners list
@@ -30,7 +31,7 @@ impl Settings {
 #[derive(Default, Debug)]
 pub struct Wallet {
     pub amount: u64,
-    pub last_burned: UnixTimestamp,
+    pub last_burned: i64, // UnixTimestamp
 }
 
 impl Wallet {
