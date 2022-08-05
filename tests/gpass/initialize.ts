@@ -17,6 +17,7 @@ describe("GPASS initialize tests", () => {
   const burnersPK = [
     new PublicKey("27WSu69fpy9NsJEKMLBVz5m6YG2hph5WiU56tvbizngN"),
     new PublicKey("2i6PhfdAByhmEJp4rccGz4kDcZv5NWHxifa9cmJ6yYM4"),
+    // new PublicKey("2XnYWYqbvyoBAEq6kKWRVPerMW7pUDxJo5AKkP5f6iBv"),
   ];
   const burnPeriod = 100;
 

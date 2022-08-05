@@ -2,6 +2,8 @@ import {
     PublicKey, Connection
 } from "@solana/web3.js";
 
+export const USER_WALLET_SEED = "user_gpass_wallet";
+
 export async function airdropSol(conn: Connection, to: PublicKey, amount: number) {
     const airdropSignature = await conn.requestAirdrop(to, amount);
     const latestBlockHash = await conn.getLatestBlockhash();

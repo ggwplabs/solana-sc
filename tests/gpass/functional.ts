@@ -9,8 +9,6 @@ import { Gpass } from "../../target/types/gpass";
 import * as assert from "assert";
 import * as utils from "../utils";
 
-const USER_WALLET_SEED = "user_gpass_wallet";
-
 describe("GPASS functional tests", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace.Gpass as Program<Gpass>;
@@ -32,7 +30,7 @@ describe("GPASS functional tests", () => {
   const user1 = Keypair.generate();
   const user1WalletPK = findProgramAddressSync(
     [
-      utf8.encode(USER_WALLET_SEED),
+      utf8.encode(utils.USER_WALLET_SEED),
       program.programId.toBytes(),
       user1.publicKey.toBytes(),
     ],
@@ -42,7 +40,7 @@ describe("GPASS functional tests", () => {
   const user2 = Keypair.generate();
   const user2WalletPK = findProgramAddressSync(
     [
-      utf8.encode(USER_WALLET_SEED),
+      utf8.encode(utils.USER_WALLET_SEED),
       program.programId.toBytes(),
       user2.publicKey.toBytes(),
     ],

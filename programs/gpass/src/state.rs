@@ -2,9 +2,9 @@ use anchor_lang::prelude::*;
 
 const DESCRIMINATOR_LEN: usize = 8;
 pub const MAX_MINTERS: usize = 1;
-const MINTERS_LEN: usize = 1 + MAX_MINTERS * 32;
+const MINTERS_LEN: usize = 4 + MAX_MINTERS * 32;
 pub const MAX_BURNERS: usize = 3;
-const BURNERS_LEN: usize = 1 + MAX_BURNERS * 32;
+const BURNERS_LEN: usize = 4 + MAX_BURNERS * 32;
 
 pub const USER_WALLET_SEED: &str = "user_gpass_wallet";
 
