@@ -27,7 +27,7 @@ describe("GPASS functional tests", () => {
   burners.forEach((item) => {
     burnersPK.push(item.publicKey);
   });
-  const burnPeriod = 30;
+  const burnPeriod = 5;
 
   const user1 = Keypair.generate();
   const user1WalletPK = findProgramAddressSync(
@@ -90,7 +90,7 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), 0);
-    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 10));
+    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
   });
 
   it("Payer create wallet for user2", async () => {
@@ -109,10 +109,10 @@ describe("GPASS functional tests", () => {
 
     const user2WalletData = await program.account.wallet.fetch(user2WalletPK);
     assert.equal(user2WalletData.amount.toNumber(), 0);
-    assert.ok(utils.assertTimestamps(user2WalletData.lastBurned.toNumber(), currentTimeStamp, 10));
+    assert.ok(utils.assertTimestamps(user2WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
   });
 
-  it("Mint amount of tokens to user1 with invalid authority", async () => {
+  it("Mint amount of gpass to user1 with invalid authority", async () => {
     const amount = 100;
     await assert.rejects(program.methods.mintTo(new anchor.BN(amount))
       .accounts({
@@ -132,7 +132,7 @@ describe("GPASS functional tests", () => {
     );
   });
 
-  it("Mint invalid amount of tokens to user1", async () => {
+  it("Mint invalid amount of gpass to user1", async () => {
     const amount = 0;
     await assert.rejects(program.methods.mintTo(new anchor.BN(amount))
       .accounts({
@@ -152,7 +152,7 @@ describe("GPASS functional tests", () => {
     );
   });
 
-  it("Burn amount of tokens to user1 with invalid authority", async () => {
+  it("Burn amount of gpass to user1 with invalid authority", async () => {
     const amount = 100;
     await assert.rejects(program.methods.burn(new anchor.BN(amount))
       .accounts({
@@ -172,7 +172,7 @@ describe("GPASS functional tests", () => {
     );
   });
 
-  it("Burn invalid amount of tokens from user1", async () => {
+  it("Burn invalid amount of gpass from user1", async () => {
     const amount = 0;
     await assert.rejects(program.methods.burn(new anchor.BN(amount))
       .accounts({
@@ -192,10 +192,9 @@ describe("GPASS functional tests", () => {
     );
   });
 
-  // TODO: mint_to, burn, burn in period + bad cases.
-  it("Mint amount of tokens to user1", async () => {
-    const amount = 100;
-    await program.methods.mintTo(new anchor.BN(amount))
+  const user1Amount = 1000;
+  it("Mint amount of gpass to user1 wallet", async () => {
+    await program.methods.mintTo(new anchor.BN(user1Amount))
       .accounts({
         authority: minters[0].publicKey,
         settings: settings.publicKey,
@@ -203,6 +202,104 @@ describe("GPASS functional tests", () => {
       })
       .signers([minters[0]])
       .rpc();
+
+    const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
+    assert.equal(user1WalletData.amount.toNumber(), user1Amount);
   });
 
+  it("Burn amount of gpass from user1 wallet", async () => {
+    await program.methods.burn(new anchor.BN(user1Amount / 2))
+      .accounts({
+        authority: burners[0].publicKey,
+        settings: settings.publicKey,
+        from: user1WalletPK,
+      })
+      .signers([burners[0]])
+      .rpc();
+
+    const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
+    assert.equal(user1WalletData.amount.toNumber(), user1Amount / 2);
+  });
+
+  it("Wait burn period and mint gpass to user1 wallet", async () => {
+    await utils.sleep(burnPeriod);
+    const currentTimeStamp = utils.currentTimestamp();
+    await program.methods.mintTo(new anchor.BN(user1Amount))
+      .accounts({
+        authority: minters[0].publicKey,
+        settings: settings.publicKey,
+        to: user1WalletPK,
+      })
+      .signers([minters[0]])
+      .rpc();
+
+    const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
+    assert.equal(user1WalletData.amount.toNumber(), user1Amount);
+    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+  });
+
+  it("Wait burn period and burn gpass from user1 wallet", async () => {
+    await utils.sleep(burnPeriod);
+    const currentTimeStamp = utils.currentTimestamp();
+    await program.methods.burn(new anchor.BN(10))
+      .accounts({
+        authority: burners[0].publicKey,
+        settings: settings.publicKey,
+        from: user1WalletPK,
+      })
+      .signers([burners[0]])
+      .rpc();
+
+    const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
+    assert.equal(user1WalletData.amount.toNumber(), 0);
+    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+  });
+
+  it("Mint gpass to user1 wallet and try burn in period", async () => {
+    const currentTimeStamp = utils.currentTimestamp();
+    await program.methods.mintTo(new anchor.BN(user1Amount))
+      .accounts({
+        authority: minters[0].publicKey,
+        settings: settings.publicKey,
+        to: user1WalletPK,
+      })
+      .signers([minters[0]])
+      .rpc();
+
+    await program.methods.tryBurnInPeriod()
+      .accounts({
+        settings: settings.publicKey,
+        wallet: user1WalletPK,
+      })
+      .rpc();
+
+    const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
+    assert.equal(user1WalletData.amount.toNumber(), user1Amount);
+    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+  });
+
+  it("Mint gpass to user1 wallet, wait and try burn in period", async () => {
+    await program.methods.mintTo(new anchor.BN(user1Amount))
+      .accounts({
+        authority: minters[0].publicKey,
+        settings: settings.publicKey,
+        to: user1WalletPK,
+      })
+      .signers([minters[0]])
+      .rpc();
+
+    await utils.sleep(burnPeriod);
+
+    const currentTimeStamp = utils.currentTimestamp();
+    await program.methods.tryBurnInPeriod()
+      .accounts({
+        settings: settings.publicKey,
+        wallet: user1WalletPK,
+      })
+      .rpc();
+
+    const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
+    assert.equal(user1WalletData.amount.toNumber(), 0);
+    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+  });
 });

@@ -12,15 +12,17 @@ export async function airdropSol(conn: Connection, to: PublicKey, amount: number
     });
 }
 
+export async function sleep(seconds: number) {
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+}
+
 export function currentTimestamp(): number {
     return Math.floor(Date.now() / 1000);
 }
 
 export function assertTimestamps(ts1: number, ts2: number, precision?: number): boolean {
     if (precision) {
-        console.log(Math.floor(ts1 / precision));
-        console.log(Math.floor(ts2 / precision));
-        return Math.floor(ts1 / precision) == Math.floor(ts2 / precision);
+        return Math.abs(ts1 - ts2) <= precision;
     }
     else {
         return ts1 == ts2;
