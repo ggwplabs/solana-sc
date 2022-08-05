@@ -22,6 +22,12 @@ $ npm install --legacy-peer-deps
 $ anchor test
 ```
 
+## Run the unit tests
+
+```
+$ cargo test --tests
+```
+
 ## Deploy Freezing contract
 
 Get the program_id

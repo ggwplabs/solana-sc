@@ -2,6 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
+gpass = "Gv9WAng6iPymaDwXMQrbsh2uTkDpAPTB89Ld4ctJejMG"
 freezing = "ABHUowgjyTkmbMRRuMYJ5ui4wAz6Z6HE4PQMHy9YqMrQ"
 staking = "DJQcSKGPXre9ZMJHGxdZhGYwKGBpEaQHPUpRzLuqhYWY"
 

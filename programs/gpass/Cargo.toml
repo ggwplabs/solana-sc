@@ -1,12 +1,12 @@
 [package]
-name = "freezing"
+name = "gpass"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "freezing"
+name = "gpass"
 
 [features]
 no-entrypoint = []
@@ -16,6 +16,4 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
-anchor-spl = "0.25.0"
-spl-token = { version = "3.3.0", features = ["no-entrypoint"] }
+anchor-lang = "0.25.0"
