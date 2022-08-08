@@ -3,15 +3,17 @@ use clap::{App, AppSettings, Arg, SubCommand};
 use solana_clap_utils::input_validators::is_valid_pubkey;
 
 pub const CMD_INITIALIZE: &str = "initialize";
-pub const CMD_UPDATE_ADMIN: &str = "update_admin";
-pub const CMD_SET_UPDATE_AUTHORITY: &str = "set_update_authority";
-pub const CMD_UPDATE_BURN_PERIOD: &str = "update_burn_period";
-pub const CMD_UPDATE_MINTERS: &str = "update_minters";
-pub const CMD_UPDATE_BURNERS: &str = "update_burners";
-pub const CMD_CREATE_WALLET: &str = "create_wallet";
-pub const CMD_MINT_TO: &str = "mint_to";
+pub const CMD_UPDATE_ADMIN: &str = "update-admin";
+pub const CMD_SET_UPDATE_AUTHORITY: &str = "set-update-authority";
+pub const CMD_UPDATE_BURN_PERIOD: &str = "update-burn-period";
+pub const CMD_UPDATE_MINTERS: &str = "update-minters";
+pub const CMD_UPDATE_BURNERS: &str = "update-burners";
+pub const CMD_CREATE_WALLET: &str = "create-wallet";
+pub const CMD_MINT_TO: &str = "mint-to";
 pub const CMD_BURN: &str = "burn";
-pub const CMD_TRY_BURN_IN_PERIOD: &str = "try_burn_in_period";
+pub const CMD_TRY_BURN_IN_PERIOD: &str = "try-burn-in-period";
+pub const CMD_SHOW_SETTINGS: &str = "show-settings";
+pub const CMD_SHOW_WALLET: &str = "show-wallet";
 
 pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name(CMDS_GPASS)
@@ -247,6 +249,38 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
                         .required(true)
                         .takes_value(true)
                         .help("The user GPASS wallet pubkey."),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name(CMD_SHOW_SETTINGS)
+                .about("Show the information about GPASS settings.")
+                .arg(
+                    Arg::with_name("settings")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The settings account address."),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name(CMD_SHOW_WALLET)
+                .about("Show the information about GPASS user wallet.")
+                .arg(
+                    Arg::with_name("settings")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The settings account address."),
+                )
+                .arg(
+                    Arg::with_name("user")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The user account address."),
                 ),
         )
 }
