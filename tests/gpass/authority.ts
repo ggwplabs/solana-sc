@@ -38,7 +38,7 @@ describe("GPASS authority tests", () => {
       .signers([admin, settings])
       .rpc();
 
-    const settingsData = await program.account.settings.fetch(settings.publicKey);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
     assert.ok(settingsData.admin.equals(admin.publicKey));
     assert.ok(settingsData.updateAuth.equals(updateAuth.publicKey));
     assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
@@ -76,7 +76,7 @@ describe("GPASS authority tests", () => {
       .signers([admin])
       .rpc();
 
-    const settingsData = await program.account.settings.fetch(settings.publicKey);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
     assert.ok(settingsData.admin.equals(newAdmin.publicKey));
   });
 
@@ -110,7 +110,7 @@ describe("GPASS authority tests", () => {
       .signers([newAdmin])
       .rpc();
 
-    const settingsData = await program.account.settings.fetch(settings.publicKey);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
     assert.ok(settingsData.updateAuth.equals(newUpdAuthority.publicKey));
   });
 
@@ -164,7 +164,7 @@ describe("GPASS authority tests", () => {
       .signers([newUpdAuthority])
       .rpc();
 
-    const settingsData = await program.account.settings.fetch(settings.publicKey);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
     assert.equal(settingsData.burnPeriod.toNumber(), newBurnPeriod);
   });
 
@@ -223,7 +223,7 @@ describe("GPASS authority tests", () => {
       .signers([newUpdAuthority])
       .rpc();
 
-    const settingsData = await program.account.settings.fetch(settings.publicKey);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
     assert.deepStrictEqual(settingsData.minters, newMinters);
   });
 
@@ -284,7 +284,7 @@ describe("GPASS authority tests", () => {
       .signers([newUpdAuthority])
       .rpc();
 
-    const settingsData = await program.account.settings.fetch(settings.publicKey);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
     assert.deepStrictEqual(settingsData.minters, newBurners);
   });
 });

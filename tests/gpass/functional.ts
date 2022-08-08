@@ -51,7 +51,7 @@ describe("GPASS functional tests", () => {
       .signers([admin, settings])
       .rpc();
 
-    const settingsData = await program.account.settings.fetch(settings.publicKey);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
     assert.ok(settingsData.admin.equals(admin.publicKey));
     assert.ok(settingsData.updateAuth.equals(updateAuth.publicKey));
     assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
@@ -61,7 +61,6 @@ describe("GPASS functional tests", () => {
     user1WalletPK = findProgramAddressSync(
       [
         utf8.encode(utils.USER_WALLET_SEED),
-        program.programId.toBytes(),
         settings.publicKey.toBytes(),
         user1.publicKey.toBytes(),
       ],
@@ -70,7 +69,6 @@ describe("GPASS functional tests", () => {
     user2WalletPK = findProgramAddressSync(
       [
         utf8.encode(utils.USER_WALLET_SEED),
-        program.programId.toBytes(),
         settings.publicKey.toBytes(),
         user2.publicKey.toBytes(),
       ],

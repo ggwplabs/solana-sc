@@ -21,16 +21,18 @@ pub enum FreezingError {
     InvalidUserGGWPWalletMint, // 6005
     #[msg("Invalid user GGWP wallet owner")]
     InvalidUserGGWPWalletOwner, // 6006
-    #[msg("Invalid user GPASS wallet mint")]
-    InvalidUserGPASSWalletMint, // 6007
-    #[msg("Invalid user GPASS wallet owner")]
-    InvalidUserGPASSWalletOwner, // 6008
     #[msg("Invalid treasury pk")]
-    InvalidTreasuryPK, // 6009
+    InvalidTreasuryPK, // 6007
+    #[msg("Invalid royalty value")]
+    InvalidRoyaltyValue, // 6008
+    #[msg("Invalid unfreeze royalty value")]
+    InvalidUnfreezeRoyaltyValue, // 6009
+    #[msg("Invalid unfreeze lock time")]
+    InvalidUnfreezeLockTime, // 6010
 
     // Freezing errors
     #[msg("Freezing amount cannot be zero")]
-    ZeroFreezingAmount, // 6010
+    ZeroFreezingAmount, // 6011
     #[msg("Unfreezing amount cannot be zero")]
-    ZeroUnfreezingAmount, // 6010
+    ZeroUnfreezingAmount, // 6012
 }
