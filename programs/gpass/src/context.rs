@@ -23,10 +23,12 @@ pub struct CreateWallet<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub user: SystemAccount<'info>,
+    pub settings: Account<'info, Settings>,
     #[account(init, payer = payer, space = Wallet::LEN,
         seeds = [
             USER_WALLET_SEED.as_bytes(),
             program_id.as_ref(),
+            settings.key().as_ref(),
             user.key().as_ref(),
         ],
         bump,

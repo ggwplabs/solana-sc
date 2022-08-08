@@ -28,24 +28,9 @@ describe("GPASS functional tests", () => {
   const burnPeriod = 5;
 
   const user1 = Keypair.generate();
-  const user1WalletPK = findProgramAddressSync(
-    [
-      utf8.encode(utils.USER_WALLET_SEED),
-      program.programId.toBytes(),
-      user1.publicKey.toBytes(),
-    ],
-    program.programId
-  )[0];
-
+  let user1WalletPK;
   const user2 = Keypair.generate();
-  const user2WalletPK = findProgramAddressSync(
-    [
-      utf8.encode(utils.USER_WALLET_SEED),
-      program.programId.toBytes(),
-      user2.publicKey.toBytes(),
-    ],
-    program.programId
-  )[0];
+  let user2WalletPK;
 
   const settings = Keypair.generate();
   before(async () => {
@@ -72,6 +57,25 @@ describe("GPASS functional tests", () => {
     assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
     assert.deepStrictEqual(settingsData.minters, mintersPK);
     assert.deepStrictEqual(settingsData.burners, burnersPK);
+
+    user1WalletPK = findProgramAddressSync(
+      [
+        utf8.encode(utils.USER_WALLET_SEED),
+        program.programId.toBytes(),
+        settings.publicKey.toBytes(),
+        user1.publicKey.toBytes(),
+      ],
+      program.programId
+    )[0];
+    user2WalletPK = findProgramAddressSync(
+      [
+        utf8.encode(utils.USER_WALLET_SEED),
+        program.programId.toBytes(),
+        settings.publicKey.toBytes(),
+        user2.publicKey.toBytes(),
+      ],
+      program.programId
+    )[0];
   });
 
   it("User1 create wallet for himself", async () => {
@@ -79,6 +83,7 @@ describe("GPASS functional tests", () => {
     await program.methods.createWallet()
       .accounts({
         payer: user1.publicKey,
+        settings: settings.publicKey,
         user: user1.publicKey,
         wallet: user1WalletPK,
         systemProgram: SystemProgram.programId,
@@ -98,6 +103,7 @@ describe("GPASS functional tests", () => {
     await program.methods.createWallet()
       .accounts({
         payer: payer.publicKey,
+        settings: settings.publicKey,
         user: user2.publicKey,
         wallet: user2WalletPK,
         systemProgram: SystemProgram.programId,

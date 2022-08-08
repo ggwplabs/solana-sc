@@ -1,0 +1,7 @@
+{
+    "fee_payer_path": "<KEYPAIR FULL PATH (ex. /home/user/.config/solana/id.json)>",
+    "network": "<localnet|devnet|testnet|mainnet>",
+    "programs": {
+        "gpass": "<Pubkey>"
+    }
+}

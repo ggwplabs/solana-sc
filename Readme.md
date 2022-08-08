@@ -75,3 +75,10 @@ $ anchor deploy -p staking --provider.cluster <cluster>
 ```
 
 Cluster must be one of [localnet, testnet, mainnet, devnet].
+
+## Build the CLI Client for smart contracts
+
+```
+$ cargo build -p cli-client --release
+$ ./target/release/cli-client --help
+```
