@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 
 mod context;
 mod error;
-mod state;
+pub mod state;
 mod utils;
 
 declare_id!("Gv9WAng6iPymaDwXMQrbsh2uTkDpAPTB89Ld4ctJejMG");
