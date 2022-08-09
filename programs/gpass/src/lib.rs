@@ -3,7 +3,7 @@ use crate::error::GpassError;
 use crate::state::{MAX_BURNERS, MAX_MINTERS};
 use anchor_lang::prelude::*;
 
-mod context;
+pub mod context;
 mod error;
 pub mod state;
 mod utils;

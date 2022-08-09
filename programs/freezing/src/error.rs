@@ -15,24 +15,32 @@ pub enum FreezingError {
     InvalidGPASSMintAuth, // 6002
     #[msg("Invalid accumulative fund mint PK")]
     InvalidAccumulativeFundMint, // 6003
+    #[msg("Invalid accumulative fund pk")]
+    InvalidAccumulativeFundPK, // 6004
     #[msg("Invalid treasury mint PK")]
-    InvalidTreasuryMint, // 6004
+    InvalidTreasuryMint, // 6005
     #[msg("Invalid user GGWP wallet mint")]
-    InvalidUserGGWPWalletMint, // 6005
+    InvalidUserGGWPWalletMint, // 6006
     #[msg("Invalid user GGWP wallet owner")]
-    InvalidUserGGWPWalletOwner, // 6006
+    InvalidUserGGWPWalletOwner, // 6007
     #[msg("Invalid treasury pk")]
-    InvalidTreasuryPK, // 6007
+    InvalidTreasuryPK, // 6008
     #[msg("Invalid royalty value")]
-    InvalidRoyaltyValue, // 6008
+    InvalidRoyaltyValue, // 6009
     #[msg("Invalid unfreeze royalty value")]
-    InvalidUnfreezeRoyaltyValue, // 6009
+    InvalidUnfreezeRoyaltyValue, // 6010
     #[msg("Invalid unfreeze lock time")]
-    InvalidUnfreezeLockTime, // 6010
+    InvalidUnfreezeLockTime, // 6011
+    #[msg("Invalid reward table")]
+    InvalidRewardTable, // 6012
+    #[msg("Invalid reward period value")]
+    InvalidRewardPeriod, // 6013
 
     // Freezing errors
     #[msg("Freezing amount cannot be zero")]
-    ZeroFreezingAmount, // 6011
+    ZeroFreezingAmount, // 6014
     #[msg("Unfreezing amount cannot be zero")]
-    ZeroUnfreezingAmount, // 6012
+    ZeroUnfreezingAmount, // 6015
+    #[msg("Additional freezing is not available")]
+    AdditionalFreezingNotAvailable, // 6016
 }

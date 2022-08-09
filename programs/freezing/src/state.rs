@@ -25,9 +25,10 @@ pub struct FreezingParams {
     pub treasury: Pubkey,
 
     pub total_freezed: u64,
+    pub reward_period: i64,
     pub royalty: u8,
     pub unfreeze_royalty: u8,
-    pub unfreeze_lock_time: i64,
+    pub unfreeze_lock_period: i64,
 
     pub reward_table: Vec<RewardTableRow>,
 }
@@ -41,6 +42,7 @@ impl FreezingParams {
         32 + // fund pk
         32 + // treasury pk
         8 + // total freezed
+        8 + // reward period
         1 + 1 + // royalty percents
         8 + // unfreeze lock time in secs
         MAX_REWARD_TABLE_LEN;
