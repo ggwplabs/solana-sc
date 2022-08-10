@@ -29,8 +29,8 @@ pub enum FreezingError {
     InvalidRoyaltyValue, // 6009
     #[msg("Invalid unfreeze royalty value")]
     InvalidUnfreezeRoyaltyValue, // 6010
-    #[msg("Invalid unfreeze lock time")]
-    InvalidUnfreezeLockTime, // 6011
+    #[msg("Invalid unfreeze lock period")]
+    InvalidUnfreezeLockPeriod, // 6011
     #[msg("Invalid reward table")]
     InvalidRewardTable, // 6012
     #[msg("Invalid reward period value")]

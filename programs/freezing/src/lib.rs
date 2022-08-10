@@ -33,7 +33,7 @@ pub mod freezing {
         );
         require!(
             unfreeze_lock_period != 0,
-            FreezingError::InvalidUnfreezeLockTime
+            FreezingError::InvalidUnfreezeLockPeriod
         );
         require!(
             utils::is_reward_table_valid(&reward_table)?,
@@ -159,6 +159,28 @@ pub mod freezing {
         );
 
         freezing_params.reward_period = reward_period;
+
+        Ok(())
+    }
+
+    /// Update authority can set the new unfreeze lock period value in seconds.
+    pub fn update_unfreeze_lock_period(
+        ctx: Context<UpdateParams>,
+        unfreeze_lock_period: i64,
+    ) -> Result<()> {
+        require!(
+            unfreeze_lock_period != 0,
+            FreezingError::InvalidUnfreezeLockPeriod
+        );
+
+        let freezing_params = &mut ctx.accounts.freezing_params;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            freezing_params.update_auth,
+            FreezingError::AccessDenied
+        );
+
+        freezing_params.unfreeze_lock_period = unfreeze_lock_period;
 
         Ok(())
     }
