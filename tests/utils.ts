@@ -27,12 +27,12 @@ export function currentTimestamp(): number {
     return Math.floor(Date.now() / 1000);
 }
 
-export function assertTimestamps(ts1: number, ts2: number, precision?: number): boolean {
+export function assertWithPrecission(val1: number, val2: number, precision?: number): boolean {
     if (precision) {
-        return Math.abs(ts1 - ts2) <= precision;
+        return Math.abs(val1 - val2) <= precision;
     }
     else {
-        return ts1 == ts2;
+        return val1 == val2;
     }
 }
 
@@ -75,4 +75,13 @@ export async function mintTokens(mint: PublicKey, authority: Keypair, wallet: Pu
         })
         .signers([authority])
         .rpc();
+}
+
+export async function getTokenBalance(wallet: PublicKey): Promise<number> {
+    const walletData = await tokenProgram.account.token.fetch(wallet);
+    return walletData.amount.toNumber();
+}
+
+export function calcRoyaltyAmount(amount: number, royalty: number): number {
+    return amount / 100 * royalty;
 }

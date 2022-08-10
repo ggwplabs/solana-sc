@@ -25,6 +25,7 @@ export class FreezingTestFixture {
 
   user: {
     kp: Keypair;
+    info: PublicKey,
     gpassWallet: PublicKey;
     ggwpWallet: PublicKey;
   }
@@ -76,7 +77,15 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
       gpassSettings.publicKey.toBytes(),
       user.publicKey.toBytes(),
     ],
-    gpass.programId
+    gpass.programId,
+  )[0];
+  const userFreezingInfo = findProgramAddressSync(
+    [
+      utf8.encode(utils.USER_INFO_SEED),
+      freezingParams.publicKey.toBytes(),
+      user.publicKey.toBytes(),
+    ],
+    freezing.programId,
   )[0];
 
   await gpass.methods.createWallet()
@@ -105,6 +114,7 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
     },
     user: {
       kp: user,
+      info: userFreezingInfo,
       ggwpWallet: userGgwpTokenWallet,
       gpassWallet: userGpassWallet,
     }

@@ -45,6 +45,7 @@ describe("GPASS initialize tests", () => {
     assert.ok(settingsData.admin.equals(admin.publicKey));
     assert.ok(settingsData.updateAuth.equals(updateAuth.publicKey));
     assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
+    assert.equal(settingsData.totalAmount.toNumber(), 0);
     assert.deepStrictEqual(settingsData.minters, mintersPK);
     assert.deepStrictEqual(settingsData.burners, burnersPK);
   });

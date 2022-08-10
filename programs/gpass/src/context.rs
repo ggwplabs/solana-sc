@@ -42,6 +42,7 @@ pub struct MintTo<'info> {
     pub authority: Signer<'info>,
     #[account(mut)]
     pub to: Account<'info, Wallet>,
+    #[account(mut)]
     pub settings: Account<'info, GpassSettings>,
 }
 
@@ -50,6 +51,7 @@ pub struct Burn<'info> {
     pub authority: Signer<'info>,
     #[account(mut)]
     pub from: Account<'info, Wallet>,
+    #[account(mut)]
     pub settings: Account<'info, GpassSettings>,
 }
 
@@ -57,5 +59,6 @@ pub struct Burn<'info> {
 pub struct BurnInPeriod<'info> {
     #[account(mut)]
     pub wallet: Account<'info, Wallet>,
+    #[account(mut)]
     pub settings: Account<'info, GpassSettings>,
 }

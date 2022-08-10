@@ -40,6 +40,7 @@ pub mod gpass {
         settings.admin = ctx.accounts.admin.key();
         settings.update_auth = update_auth;
         settings.burn_period = burn_period;
+        settings.total_amount = 0;
         settings.minters = minters;
         settings.burners = burners;
 
@@ -145,7 +146,7 @@ pub mod gpass {
     /// Mint the amount of GPASS to user wallet. Available only for minters.
     /// There is trying to burn overdues before minting.
     pub fn mint_to(ctx: Context<MintTo>, amount: u64) -> Result<()> {
-        let settings = &ctx.accounts.settings;
+        let settings = &mut ctx.accounts.settings;
         let authority = &ctx.accounts.authority;
         let to = &mut ctx.accounts.to;
         let clock = Clock::get()?;
@@ -161,12 +162,20 @@ pub mod gpass {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {
             msg!("Burn period passed, {} of GPASS burned", to.amount);
+            settings.total_amount = settings
+                .total_amount
+                .checked_sub(to.amount)
+                .ok_or(GpassError::Overflow)?;
             to.amount = 0;
             to.last_burned = clock.unix_timestamp;
         }
 
         msg!("Mint {} gpass to wallet {}", amount, to.key());
         to.amount = to.amount.checked_add(amount).ok_or(GpassError::Overflow)?;
+        settings.total_amount = settings
+            .total_amount
+            .checked_add(amount)
+            .ok_or(GpassError::Overflow)?;
 
         Ok(())
     }
@@ -174,7 +183,7 @@ pub mod gpass {
     /// Burn the amount of GPASS from user wallet. Available only for burners.
     /// There is trying to burn overdues before burning.
     pub fn burn(ctx: Context<Burn>, amount: u64) -> Result<()> {
-        let settings = &ctx.accounts.settings;
+        let settings = &mut ctx.accounts.settings;
         let authority = &ctx.accounts.authority;
         let from = &mut ctx.accounts.from;
         let clock = Clock::get()?;
@@ -190,19 +199,31 @@ pub mod gpass {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {
             msg!("Burn period passed, {} of GPASS burned", from.amount);
+            settings.total_amount = settings
+                .total_amount
+                .checked_sub(from.amount)
+                .ok_or(GpassError::Overflow)?;
             from.amount = 0;
             from.last_burned = clock.unix_timestamp;
         }
 
-        msg!("Burn {} gpass from wallet {}", amount, from.key());
-        from.amount = from.amount.checked_sub(amount).unwrap_or(0);
+        if from.amount == 0 {
+            msg!("Wallet empty");
+        } else {
+            msg!("Burn {} gpass from wallet {}", amount, from.key());
+            from.amount = from.amount.checked_sub(amount).unwrap_or(0);
+            settings.total_amount = settings
+                .total_amount
+                .checked_sub(amount)
+                .ok_or(GpassError::Overflow)?;
+        }
 
         Ok(())
     }
 
     /// Everyone in any time can synchronize user GPASS balance and burn overdues.
     pub fn try_burn_in_period(ctx: Context<BurnInPeriod>) -> Result<()> {
-        let settings = &ctx.accounts.settings;
+        let settings = &mut ctx.accounts.settings;
         let wallet = &mut ctx.accounts.wallet;
         let clock = Clock::get()?;
 
@@ -211,6 +232,10 @@ pub mod gpass {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {
             msg!("Burn period passed, {} of GPASS burned", wallet.amount);
+            settings.total_amount = settings
+                .total_amount
+                .checked_sub(wallet.amount)
+                .ok_or(GpassError::Overflow)?;
             wallet.amount = 0;
             wallet.last_burned = clock.unix_timestamp;
         }

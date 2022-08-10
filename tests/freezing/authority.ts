@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { Program, AnchorError } from "@project-serum/anchor";
 import {
-  Keypair, SystemProgram, PublicKey, LAMPORTS_PER_SOL
+  Keypair, SystemProgram, LAMPORTS_PER_SOL
 } from "@solana/web3.js";
 import { Freezing } from "../../target/types/freezing";
 import { Gpass } from "../../target/types/gpass";

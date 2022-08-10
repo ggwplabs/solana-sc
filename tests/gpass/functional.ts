@@ -55,6 +55,7 @@ describe("GPASS functional tests", () => {
     assert.ok(settingsData.admin.equals(admin.publicKey));
     assert.ok(settingsData.updateAuth.equals(updateAuth.publicKey));
     assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
+    assert.equal(settingsData.totalAmount.toNumber(), 0);
     assert.deepStrictEqual(settingsData.minters, mintersPK);
     assert.deepStrictEqual(settingsData.burners, burnersPK);
 
@@ -91,7 +92,7 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), 0);
-    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
   });
 
   it("Payer create wallet for user2", async () => {
@@ -111,7 +112,7 @@ describe("GPASS functional tests", () => {
 
     const user2WalletData = await program.account.wallet.fetch(user2WalletPK);
     assert.equal(user2WalletData.amount.toNumber(), 0);
-    assert.ok(utils.assertTimestamps(user2WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    assert.ok(utils.assertWithPrecission(user2WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
   });
 
   it("Mint amount of gpass to user1 with invalid authority", async () => {
@@ -207,6 +208,8 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
+    assert.equal(settingsData.totalAmount.toNumber(), user1Amount);
   });
 
   it("Burn amount of gpass from user1 wallet", async () => {
@@ -221,6 +224,8 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount / 2);
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
+    assert.equal(settingsData.totalAmount.toNumber(), user1Amount / 2);
   });
 
   it("Wait burn period and mint gpass to user1 wallet", async () => {
@@ -237,7 +242,9 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount);
-    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
+    assert.equal(settingsData.totalAmount.toNumber(), user1Amount);
   });
 
   it("Wait burn period and burn gpass from user1 wallet", async () => {
@@ -254,7 +261,9 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), 0);
-    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
+    assert.equal(settingsData.totalAmount.toNumber(), 0);
   });
 
   it("Mint gpass to user1 wallet and try burn in period", async () => {
@@ -277,7 +286,9 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount);
-    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
+    assert.equal(settingsData.totalAmount.toNumber(), user1Amount);
   });
 
   it("Mint gpass to user1 wallet, wait and try burn in period", async () => {
@@ -302,6 +313,8 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), 0);
-    assert.ok(utils.assertTimestamps(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
+    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
+    assert.equal(settingsData.totalAmount.toNumber(), 0);
   });
 });

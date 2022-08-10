@@ -14,6 +14,7 @@ pub struct GpassSettings {
     pub admin: Pubkey,
     pub update_auth: Pubkey,
     pub burn_period: u64,
+    pub total_amount: u64,
     pub minters: Vec<Pubkey>,
     pub burners: Vec<Pubkey>,
 }
@@ -23,6 +24,7 @@ impl GpassSettings {
         32 + // admin pk
         32 + // update auth
         8 + // burn period
+        8 + // total amount
         MINTERS_LEN + // minters list
         BURNERS_LEN; // burners list
 }

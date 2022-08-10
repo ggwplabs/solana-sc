@@ -65,6 +65,7 @@ pub struct Freeze<'info> {
     #[account(mut)]
     pub freezing_params: Box<Account<'info, FreezingParams>>,
 
+    #[account(mut)]
     pub gpass_settings: Box<Account<'info, GpassSettings>>,
 
     #[account(mut,
@@ -74,14 +75,7 @@ pub struct Freeze<'info> {
         @FreezingError::InvalidUserGGWPWalletOwner,
     )]
     pub user_ggwp_wallet: Box<Account<'info, TokenAccount>>,
-    #[account(mut,
-        seeds = [
-            USER_WALLET_SEED.as_bytes(),
-            gpass_settings.key().as_ref(),
-            user.key().as_ref(),
-        ],
-        bump
-    )]
+    #[account(mut)]
     pub user_gpass_wallet: Box<Account<'info, Wallet>>,
 
     #[account(mut,

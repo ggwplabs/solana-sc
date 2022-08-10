@@ -356,6 +356,7 @@ mod tests {
         assert_eq!(calc_royalty_amount(8, 0), Ok(0));
         assert_eq!(calc_royalty_amount(8, 1000), Ok(80));
         assert_eq!(calc_royalty_amount(50, 5000), Ok(2500));
+        assert_eq!(calc_royalty_amount(50, 5_000_000_000), Ok(2_500_000_000));
     }
 
     #[test]
