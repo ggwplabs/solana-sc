@@ -345,6 +345,50 @@ describe("Freezing authority tests", () => {
       });
   });
 
+  it("Update reward table with max+1 table size", async () => {
+    await assert.rejects(freezingProgram.methods
+      .updateRewardTable([
+        {
+          ggwpAmount: new anchor.BN(50),
+          gpassAmount: new anchor.BN(1),
+        },
+        {
+          ggwpAmount: new anchor.BN(60),
+          gpassAmount: new anchor.BN(2),
+        },
+        {
+          ggwpAmount: new anchor.BN(70),
+          gpassAmount: new anchor.BN(3),
+        },
+        {
+          ggwpAmount: new anchor.BN(80),
+          gpassAmount: new anchor.BN(4),
+        },
+        {
+          ggwpAmount: new anchor.BN(90),
+          gpassAmount: new anchor.BN(5),
+        },
+        {
+          ggwpAmount: new anchor.BN(100),
+          gpassAmount: new anchor.BN(6),
+        },
+      ])
+      .accounts({
+        authority: fixture.updateAuth.publicKey,
+        freezingParams:
+          fixture.freezing.params.publicKey
+      })
+      .signers([fixture.updateAuth])
+      .rpc(),
+      (e: AnchorError) => {
+        assert.ok(e.error !== undefined);
+        assert.strictEqual(e.error.errorCode.code, "InvalidRewardTable");
+        assert.strictEqual(e.error.errorCode.number, 6012);
+        assert.strictEqual(e.error.errorMessage, "Invalid reward table");
+        return true;
+      });
+  });
+
   it("Update reward table with invalid table", async () => {
     await assert.rejects(freezingProgram.methods
       .updateRewardTable([
@@ -383,7 +427,19 @@ describe("Freezing authority tests", () => {
         {
           ggwpAmount: new anchor.BN(2000_000_000_000),
           gpassAmount: new anchor.BN(10),
-        }
+        },
+        {
+          ggwpAmount: new anchor.BN(3000_000_000_000),
+          gpassAmount: new anchor.BN(15),
+        },
+        {
+          ggwpAmount: new anchor.BN(4000_000_000_000),
+          gpassAmount: new anchor.BN(20),
+        },
+        {
+          ggwpAmount: new anchor.BN(5000_000_000_000),
+          gpassAmount: new anchor.BN(25),
+        },
       ])
       .accounts({
         authority: newUpdateAuth.publicKey,

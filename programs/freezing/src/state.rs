@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 const DESCRIMINATOR_LEN: usize = 8;
-const MAX_REWARDS_TABLE_ROWS: usize = 5;
+pub const MAX_REWARDS_TABLE_ROWS: usize = 5;
 const REWARD_TABLE_ROW_SIZE: usize = 8 + 8;
 const MAX_REWARD_TABLE_LEN: usize = 8 + REWARD_TABLE_ROW_SIZE * MAX_REWARDS_TABLE_ROWS;
 

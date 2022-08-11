@@ -1,10 +1,16 @@
-use crate::{error::FreezingError, state::RewardTableRow};
+use crate::{
+    error::FreezingError,
+    state::{RewardTableRow, MAX_REWARDS_TABLE_ROWS},
+};
 use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
 use anchor_spl::token::spl_token::{amount_to_ui_amount, ui_amount_to_amount};
 
 /// Checks reward table valid.
 pub fn is_reward_table_valid(reward_table: &Vec<RewardTableRow>) -> Result<bool> {
     if reward_table.is_empty() {
+        return Ok(false);
+    }
+    if reward_table.len() > MAX_REWARDS_TABLE_ROWS {
         return Ok(false);
     }
 
