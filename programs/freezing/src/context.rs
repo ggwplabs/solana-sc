@@ -94,7 +94,7 @@ pub struct Freeze<'info> {
         seeds = [
             GPASS_MINT_AUTH_SEED.as_bytes(),
             freezing_params.key().as_ref(),
-            gpass_settings.key().as_ref()
+            gpass_settings.key().as_ref(),
         ],
         bump = freezing_params.gpass_mint_auth_bump,
     )]
@@ -111,45 +111,38 @@ pub struct Freeze<'info> {
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
     pub user: Signer<'info>,
-    // #[account(mut,
-    //     seeds = [
-    //         program_id.as_ref(),
-    //         freezing_params.key().as_ref(),
-    //         user.key().as_ref(),
-    //         USER_INFO_SEED.as_bytes(),
-    //     ],
-    //     bump,
-    // )]
-    // pub user_info: Box<Account<'info, UserInfo>>,
+    #[account(mut,
+        seeds = [
+            USER_INFO_SEED.as_bytes(),
+            freezing_params.key().as_ref(),
+            user.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub user_info: Box<Account<'info, UserInfo>>,
 
-    // pub freezing_params: Box<Account<'info, FreezingParams>>,
+    pub freezing_params: Box<Account<'info, FreezingParams>>,
 
-    // #[account(mut,
-    //     constraint = gpass_token.key() == freezing_params.gpass_token,
-    // )]
-    // pub gpass_token: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub gpass_settings: Box<Account<'info, GpassSettings>>,
+    #[account(mut)]
+    pub user_gpass_wallet: Box<Account<'info, Wallet>>,
 
-    // #[account(mut,
-    //     constraint = user_gpass_wallet.mint == freezing_params.gpass_token
-    //     @FreezingError::InvalidUserGPASSWalletMint,
-    //     constraint = user_gpass_wallet.owner == user.key()
-    //     @FreezingError::InvalidUserGPASSWalletOwner,
-    // )]
-    // pub user_gpass_wallet: Box<Account<'info, TokenAccount>>,
+    /// CHECK: Mint auth PDA
+    #[account(
+        seeds = [
+            GPASS_MINT_AUTH_SEED.as_bytes(),
+            freezing_params.key().as_ref(),
+            gpass_settings.key().as_ref(),
+        ],
+        bump = freezing_params.gpass_mint_auth_bump,
+    )]
+    pub gpass_mint_auth: UncheckedAccount<'info>,
 
-    // /// CHECK: Mint auth PDA
-    // #[account(
-    //     seeds = [
-    //         program_id.as_ref(),
-    //         freezing_params.to_account_info().key.as_ref(),
-    //         gpass_mint_auth.key().as_ref()
-    //     ],
-    //     bump = freezing_params.gpass_mint_auth_bump,
-    // )]
-    // pub gpass_mint_auth: UncheckedAccount<'info>,
-
-    // // Misc.
-    // pub token_program: Program<'info, Token>,
+    // Misc.
+    /// CHECK: GPASS program
+    #[account( constraint = gpass_program.key() == gpass::id() )]
+    pub gpass_program: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
@@ -157,10 +150,9 @@ pub struct Unfreeze<'info> {
     pub user: Signer<'info>,
     // #[account(mut,
     //     seeds = [
-    //         program_id.as_ref(),
+    // //         USER_INFO_SEED.as_bytes(),
     //         freezing_params.key().as_ref(),
     //         user.key().as_ref(),
-    //         USER_INFO_SEED.as_bytes(),
     //     ],
     //     bump,
     // )]

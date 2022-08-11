@@ -286,40 +286,49 @@ pub mod freezing {
 
     /// In every time user can withdraw GPASS earned.
     pub fn withdraw_gpass(ctx: Context<Withdraw>) -> Result<()> {
-        // let freezing_params = &ctx.accounts.freezing_params;
-        // let user_info = &mut ctx.accounts.user_info;
-        // let user_gpass_wallet = &mut ctx.accounts.user_gpass_wallet;
-        // let gpass_token = &mut ctx.accounts.gpass_token;
-        // let gpass_mint_auth = &ctx.accounts.gpass_mint_auth;
-        // let token_program = &ctx.accounts.token_program;
-        // let clock = Clock::get()?;
+        let user_info = &mut ctx.accounts.user_info;
+        let freezing_params = &ctx.accounts.freezing_params;
+        let gpass_settings = &mut ctx.accounts.gpass_settings;
+        let user_gpass_wallet = &mut ctx.accounts.user_gpass_wallet;
+        let gpass_mint_auth = &ctx.accounts.gpass_mint_auth;
+        let gpass_program = &ctx.accounts.gpass_program;
+        let clock = Clock::get()?;
 
-        // // Pay current GPASS earned by user
-        // let gpass_earned = utils::calc_earned_gpass(&clock, user_info.last_getting_gpass)?;
-        // // TODO: if gpass_earned == 0 -> error?
-        // msg!("Earned GPASS: {}", gpass_earned);
-        // if gpass_earned > 0 {
-        //     user_info.last_getting_gpass = clock.unix_timestamp;
-        //     // Mint GPASS tokens to user
-        //     let seeds = &[
-        //         ctx.program_id.as_ref(),
-        //         freezing_params.to_account_info().key.as_ref(),
-        //         &[freezing_params.gpass_mint_auth_bump],
-        //     ];
-        //     let signer = &[&seeds[..]];
-        //     anchor_spl::token::mint_to(
-        //         CpiContext::new_with_signer(
-        //             token_program.to_account_info(),
-        //             MintTo {
-        //                 mint: gpass_token.to_account_info(),
-        //                 authority: gpass_mint_auth.to_account_info(),
-        //                 to: user_gpass_wallet.to_account_info(),
-        //             },
-        //             signer,
-        //         ),
-        //         gpass_earned,
-        //     )?;
-        // }
+        let current_time = clock.unix_timestamp;
+        // Pay current GPASS earned by user
+        let gpass_earned = utils::calc_earned_gpass(
+            &freezing_params.reward_table,
+            user_info.freezed_amount,
+            current_time,
+            user_info.last_getting_gpass,
+            freezing_params.reward_period,
+        )?;
+        if gpass_earned == 0 {
+            msg!("GPASS is not earned yet");
+            return Err(FreezingError::ZeroGpassEarned.into());
+        }
+
+        msg!("Earned GPASS: {}", gpass_earned);
+        user_info.last_getting_gpass = clock.unix_timestamp;
+        // Mint GPASS to user
+        let seeds = &[
+            ctx.program_id.as_ref(),
+            freezing_params.to_account_info().key.as_ref(),
+            &[freezing_params.gpass_mint_auth_bump],
+        ];
+        let signer = &[&seeds[..]];
+        gpass::cpi::mint_to(
+            CpiContext::new_with_signer(
+                gpass_program.to_account_info(),
+                gpass::cpi::accounts::MintTo {
+                    authority: gpass_mint_auth.to_account_info(),
+                    settings: gpass_settings.to_account_info(),
+                    to: user_gpass_wallet.to_account_info(),
+                },
+                signer,
+            ),
+            gpass_earned,
+        )?;
 
         Ok(())
     }
