@@ -1,5 +1,5 @@
 use crate::error::FreezingError;
-use crate::state::{RewardTableRow, GPASS_MINT_AUTH_SEED};
+use crate::state::{RewardTableRow, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Transfer;
 use context::*;
@@ -51,6 +51,7 @@ pub mod freezing {
 
         freezing_params.accumulative_fund = ctx.accounts.accumulative_fund.key();
         freezing_params.treasury = ctx.accounts.treasury.key();
+        freezing_params.treasury_auth_bump = ctx.bumps["treasury_auth"];
 
         freezing_params.total_freezed = 0;
         freezing_params.reward_period = reward_period;
@@ -189,12 +190,12 @@ pub mod freezing {
     pub fn freeze(ctx: Context<Freeze>, amount: u64) -> Result<()> {
         let user = &ctx.accounts.user;
         let freezing_params = &mut ctx.accounts.freezing_params;
-        let treasury = &mut ctx.accounts.treasury;
-        let accumulative_fund = &mut ctx.accounts.accumulative_fund;
+        let treasury = &ctx.accounts.treasury;
+        let accumulative_fund = &ctx.accounts.accumulative_fund;
         let user_info = &mut ctx.accounts.user_info;
-        let user_ggwp_wallet = &mut ctx.accounts.user_ggwp_wallet;
-        let user_gpass_wallet = &mut ctx.accounts.user_gpass_wallet;
-        let gpass_settings = &mut ctx.accounts.gpass_settings;
+        let user_ggwp_wallet = &ctx.accounts.user_ggwp_wallet;
+        let user_gpass_wallet = &ctx.accounts.user_gpass_wallet;
+        let gpass_settings = &ctx.accounts.gpass_settings;
         let gpass_mint_auth = &ctx.accounts.gpass_mint_auth;
         let gpass_program = &ctx.accounts.gpass_program;
         let token_program = &ctx.accounts.token_program;
@@ -248,7 +249,7 @@ pub mod freezing {
             )?;
         }
 
-        // Transfer royalty amount into
+        // Transfer royalty amount into accumulative fund
         anchor_spl::token::transfer(
             CpiContext::new(
                 token_program.to_account_info(),
@@ -288,8 +289,8 @@ pub mod freezing {
     pub fn withdraw_gpass(ctx: Context<Withdraw>) -> Result<()> {
         let user_info = &mut ctx.accounts.user_info;
         let freezing_params = &ctx.accounts.freezing_params;
-        let gpass_settings = &mut ctx.accounts.gpass_settings;
-        let user_gpass_wallet = &mut ctx.accounts.user_gpass_wallet;
+        let gpass_settings = &ctx.accounts.gpass_settings;
+        let user_gpass_wallet = &ctx.accounts.user_gpass_wallet;
         let gpass_mint_auth = &ctx.accounts.gpass_mint_auth;
         let gpass_program = &ctx.accounts.gpass_program;
         let clock = Clock::get()?;
@@ -312,8 +313,9 @@ pub mod freezing {
         user_info.last_getting_gpass = clock.unix_timestamp;
         // Mint GPASS to user
         let seeds = &[
-            ctx.program_id.as_ref(),
+            GPASS_MINT_AUTH_SEED.as_bytes(),
             freezing_params.to_account_info().key.as_ref(),
+            gpass_settings.to_account_info().key.as_ref(),
             &[freezing_params.gpass_mint_auth_bump],
         ];
         let signer = &[&seeds[..]];
@@ -333,47 +335,126 @@ pub mod freezing {
         Ok(())
     }
 
-    // User unfreeze his amount of GGWP token.
+    // User unfreeze full amount of GGWP token.
     pub fn unfreeze(ctx: Context<Unfreeze>) -> Result<()> {
-        // TODO
-        // let freezing_params = &ctx.accounts.freezing_params;
-        // let user_info = &mut ctx.accounts.user_info;
-        // let user_gpass_wallet = &mut ctx.accounts.user_gpass_wallet;
-        // let gpass_token = &mut ctx.accounts.gpass_token;
-        // let gpass_mint_auth = &ctx.accounts.gpass_mint_auth;
-        // let token_program = &ctx.accounts.token_program;
-        // let clock = Clock::get()?;
+        let freezing_params = &mut ctx.accounts.freezing_params;
+        let user_info = &mut ctx.accounts.user_info;
+        let user_gpass_wallet = &ctx.accounts.user_gpass_wallet;
+        let user_ggwp_wallet = &ctx.accounts.user_ggwp_wallet;
+        let gpass_settings = &ctx.accounts.gpass_settings;
+        let gpass_mint_auth = &ctx.accounts.gpass_mint_auth;
+        let treasury = &ctx.accounts.treasury;
+        let treasury_auth = &ctx.accounts.treasury_auth;
+        let accumulative_fund = &ctx.accounts.accumulative_fund;
+        let token_program = &ctx.accounts.token_program;
+        let gpass_program = &ctx.accounts.gpass_program;
+        let clock = Clock::get()?;
 
-        // // Pay current GPASS earned by user
-        // let gpass_earned = utils::calc_earned_gpass(&clock, user_info.last_getting_gpass)?;
-        // msg!("Earned GPASS: {}", gpass_earned);
-        // if gpass_earned > 0 {
-        //     user_info.last_getting_gpass = clock.unix_timestamp;
-        //     // Mint GPASS tokens to user
-        //     let seeds = &[
-        //         ctx.program_id.as_ref(),
-        //         freezing_params.to_account_info().key.as_ref(),
-        //         &[freezing_params.gpass_mint_auth_bump],
-        //     ];
-        //     let signer = &[&seeds[..]];
-        //     anchor_spl::token::mint_to(
-        //         CpiContext::new_with_signer(
-        //             token_program.to_account_info(),
-        //             MintTo {
-        //                 mint: gpass_token.to_account_info(),
-        //                 authority: gpass_mint_auth.to_account_info(),
-        //                 to: user_gpass_wallet.to_account_info(),
-        //             },
-        //             signer,
-        //         ),
-        //         gpass_earned,
-        //     )?;
-        // }
+        require!(
+            user_info.freezed_amount != 0,
+            FreezingError::ZeroUnfreezingAmount
+        );
 
-        // // Unfreeze with conditions
-        // if utils::is_withdraw_royalty(&clock, user_info.freezed_time)? {
-        //     // TODO: get 15% royalty
-        // }
+        // Pay current GPASS earned by user
+        let current_time = clock.unix_timestamp;
+        let gpass_earned = utils::calc_earned_gpass(
+            &freezing_params.reward_table,
+            user_info.freezed_amount,
+            current_time,
+            user_info.last_getting_gpass,
+            freezing_params.reward_period,
+        )?;
+        msg!("Earned GPASS: {}", gpass_earned);
+        if gpass_earned > 0 {
+            user_info.last_getting_gpass = clock.unix_timestamp;
+            // Mint GPASS tokens to user
+            let seeds = &[
+                GPASS_MINT_AUTH_SEED.as_bytes(),
+                freezing_params.to_account_info().key.as_ref(),
+                gpass_settings.to_account_info().key.as_ref(),
+                &[freezing_params.gpass_mint_auth_bump],
+            ];
+            let signer = &[&seeds[..]];
+            gpass::cpi::mint_to(
+                CpiContext::new_with_signer(
+                    gpass_program.to_account_info(),
+                    gpass::cpi::accounts::MintTo {
+                        authority: gpass_mint_auth.to_account_info(),
+                        settings: gpass_settings.to_account_info(),
+                        to: user_gpass_wallet.to_account_info(),
+                    },
+                    signer,
+                ),
+                gpass_earned,
+            )?;
+        }
+
+        let mut amount = user_info.freezed_amount;
+        freezing_params.total_freezed = freezing_params
+            .total_freezed
+            .checked_sub(amount)
+            .ok_or(FreezingError::Overflow)?;
+
+        // Send royalty to accumulative fund
+        if utils::is_withdraw_royalty(
+            current_time,
+            user_info.freezed_time,
+            freezing_params.unfreeze_lock_period,
+        )? {
+            let royalty_amount = utils::calc_royalty_amount(
+                freezing_params.unfreeze_royalty,
+                user_info.freezed_amount,
+            )?;
+            msg!("Unfreeze royalty: {}", royalty_amount);
+
+            let seeds = &[
+                TREASURY_AUTH_SEED.as_bytes(),
+                freezing_params.to_account_info().key.as_ref(),
+                treasury.to_account_info().key.as_ref(),
+                &[freezing_params.treasury_auth_bump],
+            ];
+            let signer = &[&seeds[..]];
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    Transfer {
+                        from: treasury.to_account_info(),
+                        to: accumulative_fund.to_account_info(),
+                        authority: treasury_auth.to_account_info(),
+                    },
+                    signer,
+                ),
+                royalty_amount,
+            )?;
+
+            amount = amount
+                .checked_sub(royalty_amount)
+                .ok_or(FreezingError::Overflow)?;
+        }
+
+        // Send GGWP to user wallet
+        let seeds = &[
+            TREASURY_AUTH_SEED.as_bytes(),
+            freezing_params.to_account_info().key.as_ref(),
+            treasury.to_account_info().key.as_ref(),
+            &[freezing_params.treasury_auth_bump],
+        ];
+        let signer = &[&seeds[..]];
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: treasury.to_account_info(),
+                    to: user_ggwp_wallet.to_account_info(),
+                    authority: treasury_auth.to_account_info(),
+                },
+                signer,
+            ),
+            amount,
+        )?;
+
+        user_info.freezed_amount = 0;
+        user_info.freezed_time = 0;
 
         Ok(())
     }

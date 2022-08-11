@@ -45,4 +45,5 @@ pub enum FreezingError {
     AdditionalFreezingNotAvailable, // 6016
     #[msg("Zero GPASS earned")]
     ZeroGpassEarned, // 6017
+    
 }

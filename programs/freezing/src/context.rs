@@ -1,8 +1,10 @@
 use crate::error::*;
-use crate::state::{FreezingParams, UserInfo, GPASS_MINT_AUTH_SEED, USER_INFO_SEED};
+use crate::state::{
+    FreezingParams, UserInfo, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED, USER_INFO_SEED,
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use gpass::state::{GpassSettings, Wallet, USER_WALLET_SEED};
+use gpass::state::{GpassSettings, Wallet};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -21,6 +23,16 @@ pub struct Initialize<'info> {
         bump,
     )]
     pub gpass_mint_auth: UncheckedAccount<'info>,
+    /// CHECK: Treasury auth PDA
+    #[account(
+        seeds = [
+            TREASURY_AUTH_SEED.as_bytes(),
+            freezing_params.key().as_ref(),
+            treasury.key().as_ref()
+        ],
+        bump,
+    )]
+    pub treasury_auth: UncheckedAccount<'info>,
 
     pub ggwp_token: Box<Account<'info, Mint>>,
     pub gpass_settings: Box<Account<'info, GpassSettings>>,
@@ -121,6 +133,7 @@ pub struct Withdraw<'info> {
     )]
     pub user_info: Box<Account<'info, UserInfo>>,
 
+    #[account(mut)]
     pub freezing_params: Box<Account<'info, FreezingParams>>,
 
     #[account(mut)]
@@ -148,42 +161,67 @@ pub struct Withdraw<'info> {
 #[derive(Accounts)]
 pub struct Unfreeze<'info> {
     pub user: Signer<'info>,
-    // #[account(mut,
-    //     seeds = [
-    // //         USER_INFO_SEED.as_bytes(),
-    //         freezing_params.key().as_ref(),
-    //         user.key().as_ref(),
-    //     ],
-    //     bump,
-    // )]
-    // pub user_info: Box<Account<'info, UserInfo>>,
+    #[account(mut,
+        seeds = [
+            USER_INFO_SEED.as_bytes(),
+            freezing_params.key().as_ref(),
+            user.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub user_info: Box<Account<'info, UserInfo>>,
 
-    // pub freezing_params: Box<Account<'info, FreezingParams>>,
+    #[account(mut)]
+    pub freezing_params: Box<Account<'info, FreezingParams>>,
 
-    // #[account(mut,
-    //     constraint = gpass_token.key() == freezing_params.gpass_token,
-    // )]
-    // pub gpass_token: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub gpass_settings: Box<Account<'info, GpassSettings>>,
+    #[account(mut)]
+    pub user_gpass_wallet: Box<Account<'info, Wallet>>,
+    #[account(mut,
+        constraint = user_ggwp_wallet.mint == freezing_params.ggwp_token
+        @FreezingError::InvalidUserGGWPWalletMint,
+        constraint = user_ggwp_wallet.owner == user.key()
+        @FreezingError::InvalidUserGGWPWalletOwner,
+    )]
+    pub user_ggwp_wallet: Box<Account<'info, TokenAccount>>,
 
-    // #[account(mut,
-    //     constraint = user_gpass_wallet.mint == freezing_params.gpass_token
-    //     @FreezingError::InvalidUserGPASSWalletMint,
-    //     constraint = user_gpass_wallet.owner == user.key()
-    //     @FreezingError::InvalidUserGPASSWalletOwner,
-    // )]
-    // pub user_gpass_wallet: Box<Account<'info, TokenAccount>>,
+    /// CHECK: Mint auth PDA
+    #[account(
+        seeds = [
+            program_id.as_ref(),
+            freezing_params.to_account_info().key.as_ref(),
+            gpass_mint_auth.key().as_ref()
+        ],
+        bump = freezing_params.gpass_mint_auth_bump,
+    )]
+    pub gpass_mint_auth: UncheckedAccount<'info>,
 
-    // /// CHECK: Mint auth PDA
-    // #[account(
-    //     seeds = [
-    //         program_id.as_ref(),
-    //         freezing_params.to_account_info().key.as_ref(),
-    //         gpass_mint_auth.key().as_ref()
-    //     ],
-    //     bump = freezing_params.gpass_mint_auth_bump,
-    // )]
-    // pub gpass_mint_auth: UncheckedAccount<'info>,
+    #[account(
+        constraint = accumulative_fund.mint == freezing_params.ggwp_token.key()
+        @FreezingError::InvalidAccumulativeFundMint,
+    )]
+    pub accumulative_fund: Box<Account<'info, TokenAccount>>,
+    #[account(
+        constraint = treasury.mint == freezing_params.ggwp_token.key()
+        @FreezingError::InvalidTreasuryMint,
+    )]
+    pub treasury: Box<Account<'info, TokenAccount>>,
 
-    // // Misc.
-    // pub token_program: Program<'info, Token>,
+    /// CHECK: Treasury auth PDA
+    #[account(
+        seeds = [
+            TREASURY_AUTH_SEED.as_bytes(),
+            freezing_params.key().as_ref(),
+            treasury.key().as_ref()
+        ],
+        bump = freezing_params.treasury_auth_bump,
+    )]
+    pub treasury_auth: UncheckedAccount<'info>,
+
+    // Misc.
+    pub token_program: Program<'info, Token>,
+    /// CHECK: GPASS program
+    #[account( constraint = gpass_program.key() == gpass::id() )]
+    pub gpass_program: AccountInfo<'info>,
 }
