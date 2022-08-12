@@ -60,6 +60,7 @@ pub fn calc_earned_gpass(
     let spent_time = current_time
         .checked_sub(last_getting_gpass)
         .ok_or(FreezingError::Overflow)?;
+    msg!("Spent time: {}", spent_time);
     if spent_time < reward_period {
         msg!("Reward period is not passed yet.");
         return Ok(0);

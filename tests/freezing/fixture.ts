@@ -31,7 +31,7 @@ export class FreezingTestFixture {
   }
 }
 
-export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gpass: Program<Gpass>): Promise<FreezingTestFixture> {
+export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gpass: Program<Gpass>, gpassBurnPeriod?: number): Promise<FreezingTestFixture> {
   const admin = Keypair.generate();
   const updateAuth = Keypair.generate();
   const user = Keypair.generate();
@@ -65,8 +65,9 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
     freezing.programId
   )[0];
 
+  let burnPeriod = gpassBurnPeriod ? gpassBurnPeriod : 30 * 60;
   await gpass.methods.initialize(
-    new anchor.BN(30 * 60),
+    new anchor.BN(burnPeriod),
     updateAuth.publicKey,
     [gpassMintAuth],
     [])
