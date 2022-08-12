@@ -28,7 +28,6 @@ pub struct Initialize<'info> {
         seeds = [
             TREASURY_AUTH_SEED.as_bytes(),
             freezing_params.key().as_ref(),
-            treasury.key().as_ref()
         ],
         bump,
     )]
@@ -45,6 +44,8 @@ pub struct Initialize<'info> {
     #[account(
         constraint = treasury.mint == ggwp_token.key()
         @FreezingError::InvalidTreasuryMint,
+        constraint = treasury.owner == treasury_auth.key()
+        @FreezingError::InvalidTreasuryOwner,
     )]
     pub treasury: Box<Account<'info, TokenAccount>>,
 
@@ -189,20 +190,20 @@ pub struct Unfreeze<'info> {
     /// CHECK: Mint auth PDA
     #[account(
         seeds = [
-            program_id.as_ref(),
-            freezing_params.to_account_info().key.as_ref(),
-            gpass_mint_auth.key().as_ref()
+            GPASS_MINT_AUTH_SEED.as_bytes(),
+            freezing_params.key().as_ref(),
+            gpass_settings.key().as_ref(),
         ],
         bump = freezing_params.gpass_mint_auth_bump,
     )]
     pub gpass_mint_auth: UncheckedAccount<'info>,
 
-    #[account(
+    #[account(mut,
         constraint = accumulative_fund.mint == freezing_params.ggwp_token.key()
         @FreezingError::InvalidAccumulativeFundMint,
     )]
     pub accumulative_fund: Box<Account<'info, TokenAccount>>,
-    #[account(
+    #[account(mut,
         constraint = treasury.mint == freezing_params.ggwp_token.key()
         @FreezingError::InvalidTreasuryMint,
     )]
@@ -213,7 +214,6 @@ pub struct Unfreeze<'info> {
         seeds = [
             TREASURY_AUTH_SEED.as_bytes(),
             freezing_params.key().as_ref(),
-            treasury.key().as_ref()
         ],
         bump = freezing_params.treasury_auth_bump,
     )]

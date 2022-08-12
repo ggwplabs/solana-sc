@@ -44,6 +44,7 @@ describe("Freezing authority tests", () => {
         gpassSettings: fixture.freezing.gpassSettings.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         treasury: fixture.freezing.treasury,
+        treasuryAuth: fixture.freezing.treasuryAuth,
         ggwpToken: fixture.freezing.ggwpToken,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -170,7 +171,7 @@ describe("Freezing authority tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "InvalidRoyaltyValue");
-        assert.strictEqual(e.error.errorCode.number, 6009);
+        assert.strictEqual(e.error.errorCode.number, 6010);
         assert.strictEqual(e.error.errorMessage, "Invalid royalty value");
         return true;
       });
@@ -225,7 +226,7 @@ describe("Freezing authority tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "InvalidUnfreezeRoyaltyValue");
-        assert.strictEqual(e.error.errorCode.number, 6010);
+        assert.strictEqual(e.error.errorCode.number, 6011);
         assert.strictEqual(e.error.errorMessage, "Invalid unfreeze royalty value");
         return true;
       });
@@ -280,7 +281,7 @@ describe("Freezing authority tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "InvalidRewardPeriod");
-        assert.strictEqual(e.error.errorCode.number, 6013);
+        assert.strictEqual(e.error.errorCode.number, 6014);
         assert.strictEqual(e.error.errorMessage, "Invalid reward period value");
         return true;
       });
@@ -339,7 +340,7 @@ describe("Freezing authority tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "InvalidRewardTable");
-        assert.strictEqual(e.error.errorCode.number, 6012);
+        assert.strictEqual(e.error.errorCode.number, 6013);
         assert.strictEqual(e.error.errorMessage, "Invalid reward table");
         return true;
       });
@@ -383,7 +384,7 @@ describe("Freezing authority tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "InvalidRewardTable");
-        assert.strictEqual(e.error.errorCode.number, 6012);
+        assert.strictEqual(e.error.errorCode.number, 6013);
         assert.strictEqual(e.error.errorMessage, "Invalid reward table");
         return true;
       });
@@ -411,7 +412,7 @@ describe("Freezing authority tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "InvalidRewardTable");
-        assert.strictEqual(e.error.errorCode.number, 6012);
+        assert.strictEqual(e.error.errorCode.number, 6013);
         assert.strictEqual(e.error.errorMessage, "Invalid reward table");
         return true;
       });
@@ -489,7 +490,7 @@ describe("Freezing authority tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "InvalidUnfreezeLockPeriod");
-        assert.strictEqual(e.error.errorCode.number, 6011);
+        assert.strictEqual(e.error.errorCode.number, 6012);
         assert.strictEqual(e.error.errorMessage, "Invalid unfreeze lock period");
         return true;
       });

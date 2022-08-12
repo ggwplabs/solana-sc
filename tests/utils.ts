@@ -6,6 +6,7 @@ import {
 const tokenProgram = anchor.Spl.token();
 
 export const GPASS_MINT_AUTH_SEED = "gpass_mint_auth";
+export const TREASURY_AUTH_SEED = "treasury_auth";
 export const USER_INFO_SEED = "user_info";
 export const USER_WALLET_SEED = "user_gpass_wallet";
 

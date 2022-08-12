@@ -52,6 +52,7 @@ describe("Freezing functional tests", () => {
         gpassSettings: fixture.freezing.gpassSettings.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         treasury: fixture.freezing.treasury,
+        treasuryAuth: fixture.freezing.treasuryAuth,
         ggwpToken: fixture.freezing.ggwpToken,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -80,6 +81,8 @@ describe("Freezing functional tests", () => {
       .signers([fixture.user.kp])
       .rpc();
 
+    const userInfoData = await freezingProgram.account.userInfo.fetch(fixture.user.info);
+    assert.ok(utils.assertWithPrecission(userInfoData.freezedAmount.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     const userWalletData = await gpassProgram.account.wallet.fetch(fixture.user.gpassWallet);
     assert.equal(userWalletData.amount.toNumber(), 5);
     assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.freezing.accumulativeFund), utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));

@@ -1,8 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { AnchorError, Program } from "@project-serum/anchor";
-import {
-  Keypair, SystemProgram, LAMPORTS_PER_SOL
-} from "@solana/web3.js";
+import { SystemProgram } from "@solana/web3.js";
 import { Freezing } from "../../target/types/freezing";
 import { Gpass } from "../../target/types/gpass";
 import * as assert from "assert";
@@ -52,6 +50,7 @@ describe("Freezing bad cases tests", () => {
         gpassSettings: fixture.freezing.gpassSettings.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         treasury: fixture.freezing.treasury,
+        treasuryAuth: fixture.freezing.treasuryAuth,
         ggwpToken: fixture.freezing.ggwpToken,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -81,8 +80,59 @@ describe("Freezing bad cases tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "ZeroFreezingAmount");
-        assert.strictEqual(e.error.errorCode.number, 6014);
+        assert.strictEqual(e.error.errorCode.number, 6015);
         assert.strictEqual(e.error.errorMessage, "Freezing amount cannot be zero");
+        return true;
+      }
+    );
+  });
+
+  it("User trying to withdraw before freeze", async () => {
+    await assert.rejects(freezingProgram.methods.withdrawGpass()
+      .accounts({
+        user: fixture.user.kp.publicKey,
+        userInfo: fixture.user.info,
+        userGpassWallet: fixture.user.gpassWallet,
+        freezingParams: fixture.freezing.params.publicKey,
+        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        gpassMintAuth: fixture.freezing.gpassMintAuth,
+        gpassProgram: gpassProgram.programId,
+      })
+      .signers([fixture.user.kp])
+      .rpc(),
+      (e: AnchorError) => {
+        assert.ok(e.error !== undefined);
+        assert.strictEqual(e.error.errorCode.code, "AccountNotInitialized");
+        assert.strictEqual(e.error.errorCode.number, 3012);
+        assert.strictEqual(e.error.errorMessage, "The program expected this account to be already initialized");
+        return true;
+      }
+    );
+  });
+
+  it("Trying to unfreeze before freeze", async () => {
+    await assert.rejects(freezingProgram.methods.unfreeze()
+      .accounts({
+        user: fixture.user.kp.publicKey,
+        userInfo: fixture.user.info,
+        userGgwpWallet: fixture.user.ggwpWallet,
+        userGpassWallet: fixture.user.gpassWallet,
+        freezingParams: fixture.freezing.params.publicKey,
+        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        gpassMintAuth: fixture.freezing.gpassMintAuth,
+        accumulativeFund: fixture.freezing.accumulativeFund,
+        treasury: fixture.freezing.treasury,
+        treasuryAuth: fixture.freezing.treasuryAuth,
+        gpassProgram: gpassProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([fixture.user.kp])
+      .rpc(),
+      (e: AnchorError) => {
+        assert.ok(e.error !== undefined);
+        assert.strictEqual(e.error.errorCode.code, "AccountNotInitialized");
+        assert.strictEqual(e.error.errorCode.number, 3012);
+        assert.strictEqual(e.error.errorMessage, "The program expected this account to be already initialized");
         return true;
       }
     );
@@ -108,6 +158,8 @@ describe("Freezing bad cases tests", () => {
       .signers([fixture.user.kp])
       .rpc();
 
+    const userInfoData = await freezingProgram.account.userInfo.fetch(fixture.user.info);
+    assert.ok(utils.assertWithPrecission(userInfoData.freezedAmount.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     const userWalletData = await gpassProgram.account.wallet.fetch(fixture.user.gpassWallet);
     assert.equal(userWalletData.amount.toNumber(), 5);
     assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.freezing.accumulativeFund), utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
@@ -116,6 +168,29 @@ describe("Freezing bad cases tests", () => {
     assert.ok(utils.assertWithPrecission(freezingParamsData.totalFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     const gpassSettingsData = await gpassProgram.account.gpassSettings.fetch(fixture.freezing.gpassSettings.publicKey);
     assert.equal(gpassSettingsData.totalAmount.toNumber(), 5);
+  });
+
+  it("User trying to withdraw before period passed", async () => {
+    await assert.rejects(freezingProgram.methods.withdrawGpass()
+      .accounts({
+        user: fixture.user.kp.publicKey,
+        userInfo: fixture.user.info,
+        userGpassWallet: fixture.user.gpassWallet,
+        freezingParams: fixture.freezing.params.publicKey,
+        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        gpassMintAuth: fixture.freezing.gpassMintAuth,
+        gpassProgram: gpassProgram.programId,
+      })
+      .signers([fixture.user.kp])
+      .rpc(),
+      (e: AnchorError) => {
+        assert.ok(e.error !== undefined);
+        assert.strictEqual(e.error.errorCode.code, "ZeroGpassEarned");
+        assert.strictEqual(e.error.errorCode.number, 6018);
+        assert.strictEqual(e.error.errorMessage, "Zero GPASS earned");
+        return true;
+      }
+    );
   });
 
   it("Additional freeze not avaliable", async () => {
@@ -139,12 +214,14 @@ describe("Freezing bad cases tests", () => {
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
         assert.strictEqual(e.error.errorCode.code, "AdditionalFreezingNotAvailable");
-        assert.strictEqual(e.error.errorCode.number, 6016);
+        assert.strictEqual(e.error.errorCode.number, 6017);
         assert.strictEqual(e.error.errorMessage, "Additional freezing is not available");
         return true;
       }
     );
 
+    const userInfoData = await freezingProgram.account.userInfo.fetch(fixture.user.info);
+    assert.ok(utils.assertWithPrecission(userInfoData.freezedAmount.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     const userWalletData = await gpassProgram.account.wallet.fetch(fixture.user.gpassWallet);
     assert.equal(userWalletData.amount.toNumber(), 5);
     assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.freezing.accumulativeFund), utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
@@ -155,5 +232,65 @@ describe("Freezing bad cases tests", () => {
     assert.equal(gpassSettingsData.totalAmount.toNumber(), 5);
   });
 
-  // TODO: unfreeze, withdraw bad cases
+  it("Unfreeze full amount of GGWP", async () => {
+    const userInfoDataBefore = await freezingProgram.account.userInfo.fetch(fixture.user.info);
+    const freezedAmountBefore = userInfoDataBefore.freezedAmount.toNumber();
+    const accumulativeFundAmountBefore = await utils.getTokenBalance(fixture.freezing.accumulativeFund);
+    await freezingProgram.methods.unfreeze()
+      .accounts({
+        user: fixture.user.kp.publicKey,
+        userInfo: fixture.user.info,
+        userGgwpWallet: fixture.user.ggwpWallet,
+        userGpassWallet: fixture.user.gpassWallet,
+        freezingParams: fixture.freezing.params.publicKey,
+        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        gpassMintAuth: fixture.freezing.gpassMintAuth,
+        accumulativeFund: fixture.freezing.accumulativeFund,
+        treasury: fixture.freezing.treasury,
+        treasuryAuth: fixture.freezing.treasuryAuth,
+        gpassProgram: gpassProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([fixture.user.kp])
+      .rpc();
+
+    const userInfoData = await freezingProgram.account.userInfo.fetch(fixture.user.info);
+    assert.equal(userInfoData.freezedAmount.toNumber(), 0);
+    const userWalletData = await gpassProgram.account.wallet.fetch(fixture.user.gpassWallet);
+    assert.equal(userWalletData.amount.toNumber(), 5);
+    assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.freezing.accumulativeFund), accumulativeFundAmountBefore + utils.calcRoyaltyAmount(freezedAmountBefore, unfreezeRoyalty), 1));
+    assert.equal(await utils.getTokenBalance(fixture.freezing.treasury), 0);
+    const freezingParamsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
+    assert.equal(freezingParamsData.totalFreezed.toNumber(), 0);
+    const gpassSettingsData = await gpassProgram.account.gpassSettings.fetch(fixture.freezing.gpassSettings.publicKey);
+    assert.equal(gpassSettingsData.totalAmount.toNumber(), 5);
+  });
+
+  it("Trying to unfreeze zero amount", async () => {
+    await assert.rejects(freezingProgram.methods.unfreeze()
+      .accounts({
+        user: fixture.user.kp.publicKey,
+        userInfo: fixture.user.info,
+        userGgwpWallet: fixture.user.ggwpWallet,
+        userGpassWallet: fixture.user.gpassWallet,
+        freezingParams: fixture.freezing.params.publicKey,
+        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        gpassMintAuth: fixture.freezing.gpassMintAuth,
+        accumulativeFund: fixture.freezing.accumulativeFund,
+        treasury: fixture.freezing.treasury,
+        treasuryAuth: fixture.freezing.treasuryAuth,
+        gpassProgram: gpassProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([fixture.user.kp])
+      .rpc(),
+      (e: AnchorError) => {
+        assert.ok(e.error !== undefined);
+        assert.strictEqual(e.error.errorCode.code, "ZeroUnfreezingAmount");
+        assert.strictEqual(e.error.errorCode.number, 6016);
+        assert.strictEqual(e.error.errorMessage, "Unfreezing amount cannot be zero");
+        return true;
+      }
+    );
+  });
 });

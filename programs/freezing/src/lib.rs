@@ -396,6 +396,13 @@ pub mod freezing {
             .ok_or(FreezingError::Overflow)?;
 
         // Send royalty to accumulative fund
+        let seeds = &[
+            TREASURY_AUTH_SEED.as_bytes(),
+            freezing_params.to_account_info().key.as_ref(),
+            &[freezing_params.treasury_auth_bump],
+        ];
+        let treasury_auth_signer = &[&seeds[..]];
+
         if utils::is_withdraw_royalty(
             current_time,
             user_info.freezed_time,
@@ -407,13 +414,6 @@ pub mod freezing {
             )?;
             msg!("Unfreeze royalty: {}", royalty_amount);
 
-            let seeds = &[
-                TREASURY_AUTH_SEED.as_bytes(),
-                freezing_params.to_account_info().key.as_ref(),
-                treasury.to_account_info().key.as_ref(),
-                &[freezing_params.treasury_auth_bump],
-            ];
-            let signer = &[&seeds[..]];
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     token_program.to_account_info(),
@@ -422,7 +422,7 @@ pub mod freezing {
                         to: accumulative_fund.to_account_info(),
                         authority: treasury_auth.to_account_info(),
                     },
-                    signer,
+                    treasury_auth_signer,
                 ),
                 royalty_amount,
             )?;
@@ -433,13 +433,6 @@ pub mod freezing {
         }
 
         // Send GGWP to user wallet
-        let seeds = &[
-            TREASURY_AUTH_SEED.as_bytes(),
-            freezing_params.to_account_info().key.as_ref(),
-            treasury.to_account_info().key.as_ref(),
-            &[freezing_params.treasury_auth_bump],
-        ];
-        let signer = &[&seeds[..]];
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 token_program.to_account_info(),
@@ -448,7 +441,7 @@ pub mod freezing {
                     to: user_ggwp_wallet.to_account_info(),
                     authority: treasury_auth.to_account_info(),
                 },
-                signer,
+                treasury_auth_signer,
             ),
             amount,
         )?;

@@ -15,12 +15,12 @@ export class FreezingTestFixture {
 
   freezing: {
     params: Keypair;
-
     gpassSettings: Keypair;
     gpassMintAuth: PublicKey,
     ggwpToken: PublicKey,
     accumulativeFund: PublicKey;
     treasury: PublicKey;
+    treasuryAuth: PublicKey,
   }
 
   user: {
@@ -44,7 +44,14 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
 
   const ggwpToken = await utils.createMint(admin.publicKey, 9);
   const accumulativeFund = await utils.createTokenWallet(ggwpToken, admin.publicKey);
-  const treasury = await utils.createTokenWallet(ggwpToken, admin.publicKey);
+  const treasuryAuth = findProgramAddressSync(
+    [
+      utf8.encode(utils.TREASURY_AUTH_SEED),
+      freezingParams.publicKey.toBytes(),
+    ],
+    freezing.programId,
+  )[0];
+  const treasury = await utils.createTokenWallet(ggwpToken, treasuryAuth);
   const userGgwpTokenWallet = await utils.createTokenWallet(ggwpToken, user.publicKey);
   await utils.mintTokens(ggwpToken, admin, userGgwpTokenWallet, 100_000_000_000);
 
@@ -105,12 +112,12 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
 
     freezing: {
       params: freezingParams,
-
       gpassSettings: gpassSettings,
       gpassMintAuth: gpassMintAuth,
       ggwpToken: ggwpToken,
       accumulativeFund: accumulativeFund,
       treasury: treasury,
+      treasuryAuth: treasuryAuth,
     },
     user: {
       kp: user,
