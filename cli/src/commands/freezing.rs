@@ -56,14 +56,6 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                         .help("The accumulative fund wallet pubkey."),
                 )
                 .arg(
-                    Arg::with_name("treasury")
-                        .value_name("PUBKEY")
-                        .validator(is_valid_pubkey)
-                        .required(true)
-                        .takes_value(true)
-                        .help("The treasury wallet pubkey."),
-                )
-                .arg(
                     Arg::with_name("reward_period")
                         .value_name("u64")
                         .required(true)
@@ -93,6 +85,7 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                 )
                 .arg(
                     Arg::with_name("reward_table_ggwp")
+                        .long("ggwp")
                         .value_name("u64")
                         .multiple(true)
                         .required(true)
@@ -101,6 +94,7 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                 )
                 .arg(
                     Arg::with_name("reward_table_gpass")
+                        .long("gpass")
                         .value_name("u64")
                         .multiple(true)
                         .required(true)
@@ -218,6 +212,7 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                 )
                 .arg(
                     Arg::with_name("reward_table_ggwp")
+                        .long("ggwp")
                         .value_name("u64")
                         .multiple(true)
                         .required(true)
@@ -226,6 +221,7 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                 )
                 .arg(
                     Arg::with_name("reward_table_gpass")
+                        .long("gpass")
                         .value_name("u64")
                         .multiple(true)
                         .required(true)
@@ -265,7 +261,7 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                 )
                 .arg(
                     Arg::with_name("amount")
-                        .value_name("u64")
+                        .value_name("ui_amount (f64)")
                         .required(true)
                         .takes_value(true)
                         .help("The amount to freeze."),

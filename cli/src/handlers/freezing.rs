@@ -10,6 +10,7 @@ use clap::{ArgMatches, Error};
 use freezing::state::{
     FreezingParams, RewardTableRow, UserInfo, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED,
 };
+use spl_token::ui_amount_to_amount;
 
 pub fn handle(
     cmd_matches: &ArgMatches,
@@ -26,7 +27,6 @@ pub fn handle(
             let ggwp_token = value_t_or_exit!(arg_matches, "ggwp_token", Pubkey);
             let gpass_settings = value_t_or_exit!(arg_matches, "gpass_settings", Pubkey);
             let accumulative_fund = value_t_or_exit!(arg_matches, "accumulative_fund", Pubkey);
-            let treasury = value_t_or_exit!(arg_matches, "treasury", Pubkey);
             let reward_period = value_t_or_exit!(arg_matches, "reward_period", i64);
             let royalty = value_t_or_exit!(arg_matches, "royalty", u8);
             let unfreeze_royalty = value_t_or_exit!(arg_matches, "unfreeze_royalty", u8);
@@ -50,7 +50,6 @@ pub fn handle(
                 ggwp_token,
                 gpass_settings,
                 accumulative_fund,
-                treasury,
                 reward_period,
                 royalty,
                 unfreeze_royalty,
@@ -145,7 +144,8 @@ pub fn handle(
 
         (commands::freezing::CMD_FREEZE, Some(arg_matches)) => {
             let params = value_t_or_exit!(arg_matches, "params", Pubkey);
-            let amount = value_t_or_exit!(arg_matches, "amount", u64);
+            let amount = value_t_or_exit!(arg_matches, "amount", f64);
+            let amount = ui_amount_to_amount(amount, 9);
             cmd_freeze(&program, gpass_program_id, params, amount).expect("Freeze error");
 
             println!("Successful");
@@ -213,7 +213,6 @@ fn cmd_initialize(
     ggwp_token: Pubkey,
     gpass_settings: Pubkey,
     accumulative_fund: Pubkey,
-    treasury: Pubkey,
     reward_period: i64,
     royalty: u8,
     unfreeze_royalty: u8,
@@ -231,11 +230,14 @@ fn cmd_initialize(
         ],
         &program.id(),
     );
+    println!("GPASS mint auth: {}", gpass_mint_auth);
 
     let (treasury_auth, _) = Pubkey::find_program_address(
         &[TREASURY_AUTH_SEED.as_bytes(), params.pubkey().as_ref()],
         &program.id(),
     );
+
+    let treasury = get_or_create_token_account(program, ggwp_token, treasury_auth)?;
 
     program
         .request()
