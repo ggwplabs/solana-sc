@@ -71,7 +71,7 @@ describe("Freezing authority tests", () => {
     const invalidAuthority = Keypair.generate();
     await utils.airdropSol(freezingProgram.provider.connection, invalidAuthority.publicKey, 1 * LAMPORTS_PER_SOL);
     await assert.rejects(freezingProgram.methods
-      .changeAdmin(newAdmin.publicKey)
+      .updateAdmin(newAdmin.publicKey)
       .accounts({
         authority: invalidAuthority.publicKey,
         freezingParams:
@@ -90,7 +90,7 @@ describe("Freezing authority tests", () => {
 
   it("Update admin", async () => {
     await freezingProgram.methods
-      .changeAdmin(newAdmin.publicKey)
+      .updateAdmin(newAdmin.publicKey)
       .accounts({
         authority: fixture.admin.publicKey,
         freezingParams:

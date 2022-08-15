@@ -18,7 +18,7 @@ pub struct Initialize<'info> {
         seeds = [
             GPASS_MINT_AUTH_SEED.as_bytes(),
             freezing_params.key().as_ref(),
-            gpass_settings.key().as_ref()
+            gpass_settings.key().as_ref(),
         ],
         bump,
     )]
@@ -55,7 +55,7 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-pub struct UpdateParams<'info> {
+pub struct UpdateParam<'info> {
     pub authority: Signer<'info>,
     #[account(mut)]
     pub freezing_params: Account<'info, FreezingParams>,

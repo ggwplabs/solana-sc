@@ -13,6 +13,7 @@ pub struct CLIConfig {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Programs {
     pub gpass: String,
+    pub freezing: String,
 }
 
 impl Default for CLIConfig {
@@ -25,6 +26,7 @@ impl Default for CLIConfig {
         let network = "localnet".to_string();
         let programs = Programs {
             gpass: gpass::id().to_string(),
+            freezing: freezing::id().to_string(),
         };
 
         Self {

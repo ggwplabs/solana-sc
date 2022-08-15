@@ -6,7 +6,7 @@ use context::*;
 
 mod context;
 mod error;
-mod state;
+pub mod state;
 mod utils;
 
 declare_id!("ABHUowgjyTkmbMRRuMYJ5ui4wAz6Z6HE4PQMHy9YqMrQ");
@@ -64,7 +64,7 @@ pub mod freezing {
     }
 
     /// Current admin can set another admin.
-    pub fn change_admin(ctx: Context<UpdateParams>, admin: Pubkey) -> Result<()> {
+    pub fn update_admin(ctx: Context<UpdateParam>, admin: Pubkey) -> Result<()> {
         let freezing_params = &mut ctx.accounts.freezing_params;
         require_keys_eq!(
             ctx.accounts.authority.key(),
@@ -78,7 +78,7 @@ pub mod freezing {
     }
 
     /// Admin can set the new update authority.
-    pub fn set_update_authority(ctx: Context<UpdateParams>, update_auth: Pubkey) -> Result<()> {
+    pub fn set_update_authority(ctx: Context<UpdateParam>, update_auth: Pubkey) -> Result<()> {
         let freezing_params = &mut ctx.accounts.freezing_params;
         require_keys_eq!(
             ctx.accounts.authority.key(),
@@ -92,7 +92,7 @@ pub mod freezing {
     }
 
     /// Update authority can set the new royalty percent value.
-    pub fn update_royalty(ctx: Context<UpdateParams>, royalty: u8) -> Result<()> {
+    pub fn update_royalty(ctx: Context<UpdateParam>, royalty: u8) -> Result<()> {
         require!(royalty <= 100, FreezingError::InvalidRoyaltyValue);
 
         let freezing_params = &mut ctx.accounts.freezing_params;
@@ -108,7 +108,7 @@ pub mod freezing {
     }
 
     /// Update authority can set the new unfreeze royalty percent value.
-    pub fn update_unfreeze_royalty(ctx: Context<UpdateParams>, unfreeze_royalty: u8) -> Result<()> {
+    pub fn update_unfreeze_royalty(ctx: Context<UpdateParam>, unfreeze_royalty: u8) -> Result<()> {
         require!(
             unfreeze_royalty <= 100,
             FreezingError::InvalidUnfreezeRoyaltyValue
@@ -128,7 +128,7 @@ pub mod freezing {
 
     /// Update authority can set the new reward table.
     pub fn update_reward_table(
-        ctx: Context<UpdateParams>,
+        ctx: Context<UpdateParam>,
         reward_table: Vec<RewardTableRow>,
     ) -> Result<()> {
         require!(
@@ -149,7 +149,7 @@ pub mod freezing {
     }
 
     /// Update authority can set the new reward period value.
-    pub fn update_reward_period(ctx: Context<UpdateParams>, reward_period: i64) -> Result<()> {
+    pub fn update_reward_period(ctx: Context<UpdateParam>, reward_period: i64) -> Result<()> {
         require!(reward_period != 0, FreezingError::InvalidRewardPeriod,);
 
         let freezing_params = &mut ctx.accounts.freezing_params;
@@ -166,7 +166,7 @@ pub mod freezing {
 
     /// Update authority can set the new unfreeze lock period value in seconds.
     pub fn update_unfreeze_lock_period(
-        ctx: Context<UpdateParams>,
+        ctx: Context<UpdateParam>,
         unfreeze_lock_period: i64,
     ) -> Result<()> {
         require!(
