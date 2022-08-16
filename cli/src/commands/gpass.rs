@@ -12,7 +12,7 @@ pub const CMD_CREATE_WALLET: &str = "create-wallet";
 pub const CMD_MINT_TO: &str = "mint-to";
 pub const CMD_BURN: &str = "burn";
 pub const CMD_TRY_BURN_IN_PERIOD: &str = "try-burn-in-period";
-pub const CMD_SHOW_SETTINGS: &str = "show-settings";
+pub const CMD_SHOW_INFO: &str = "show-info";
 pub const CMD_SHOW_WALLET: &str = "show-wallet";
 
 pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
@@ -35,7 +35,7 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The params update authority pubkey."),
+                        .help("The GPASS info update authority pubkey."),
                 )
                 .arg(
                     Arg::with_name("minter")
@@ -60,12 +60,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_ADMIN)
                 .about("Admin can set the new admin of GPASS.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("admin")
@@ -80,12 +80,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_SET_UPDATE_AUTHORITY)
                 .about("Admin can set the new update authority of GPASS.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("update_authority")
@@ -100,12 +100,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_BURN_PERIOD)
                 .about("Update authority can set the new burn period value.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("burn_period")
@@ -119,12 +119,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_MINTERS)
                 .about("Update authority can set the new list of minters.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("minter")
@@ -140,12 +140,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_BURNERS)
                 .about("Update authority can set the new list of burners.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("burner")
@@ -161,12 +161,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_CREATE_WALLET)
                 .about("Create the new GPASS wallet for user.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("user")
@@ -181,12 +181,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_MINT_TO)
                 .about("Mint the amount of GPASS into user wallet. Only for mint authority.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("to")
@@ -208,12 +208,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_BURN)
                 .about("Burn the amount of GPASS from user wallet. Only for burn authority.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("from")
@@ -235,12 +235,12 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_TRY_BURN_IN_PERIOD)
                 .about("Try to burn the full amount of GPASS from user wallet in period.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("wallet")
@@ -252,27 +252,27 @@ pub fn get_gpass_commands<'a, 'b>() -> App<'a, 'b> {
                 ),
         )
         .subcommand(
-            SubCommand::with_name(CMD_SHOW_SETTINGS)
-                .about("Show the information about GPASS settings.")
+            SubCommand::with_name(CMD_SHOW_INFO)
+                .about("Show the information about GPASS Info.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 ),
         )
         .subcommand(
             SubCommand::with_name(CMD_SHOW_WALLET)
                 .about("Show the information about GPASS user wallet.")
                 .arg(
-                    Arg::with_name("settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The settings account address."),
+                        .help("The GPASS Info account address."),
                 )
                 .arg(
                     Arg::with_name("user")

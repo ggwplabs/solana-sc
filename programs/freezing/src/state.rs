@@ -11,13 +11,13 @@ pub const USER_INFO_SEED: &str = "user_info";
 
 #[account]
 #[derive(Default, Debug)]
-pub struct FreezingParams {
+pub struct FreezingInfo {
     // Administrator can call the admin only instructions
     pub admin: Pubkey,
     pub update_auth: Pubkey,
 
     pub ggwp_token: Pubkey,
-    pub gpass_settings: Pubkey,
+    pub gpass_info: Pubkey,
     pub gpass_mint_auth_bump: u8,
 
     // Wallet for royalty
@@ -35,12 +35,12 @@ pub struct FreezingParams {
     pub reward_table: Vec<RewardTableRow>,
 }
 
-impl FreezingParams {
+impl FreezingInfo {
     pub const LEN: usize = DESCRIMINATOR_LEN +
         32 + // admin pk
         32 + // update auth pk
         32 + // ggwp token
-        32 + 1 + // gpass settings, gpass mint auth bump
+        32 + 1 + // gpass info, gpass mint auth bump
         32 + // fund pk
         32 + 1 + // treasury pk, treasury auth bump
         8 + // total freezed

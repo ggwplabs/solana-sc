@@ -36,13 +36,13 @@ pub mod gpass {
         );
         require_neq!(burn_period, 0, GpassError::InvalidBurnPeriodValue);
 
-        let settings = &mut ctx.accounts.settings;
-        settings.admin = ctx.accounts.admin.key();
-        settings.update_auth = update_auth;
-        settings.burn_period = burn_period;
-        settings.total_amount = 0;
-        settings.minters = minters;
-        settings.burners = burners;
+        let gpass_info = &mut ctx.accounts.gpass_info;
+        gpass_info.admin = ctx.accounts.admin.key();
+        gpass_info.update_auth = update_auth;
+        gpass_info.burn_period = burn_period;
+        gpass_info.total_amount = 0;
+        gpass_info.minters = minters;
+        gpass_info.burners = burners;
 
         Ok(())
     }
@@ -50,10 +50,10 @@ pub mod gpass {
     /// Current admin can set the new admin.
     pub fn update_admin(ctx: Context<UpdateParam>, admin: Pubkey) -> Result<()> {
         let authority = &ctx.accounts.authority;
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
 
-        require_keys_eq!(authority.key(), settings.admin, GpassError::AccessDenied);
-        settings.admin = admin;
+        require_keys_eq!(authority.key(), gpass_info.admin, GpassError::AccessDenied);
+        gpass_info.admin = admin;
 
         Ok(())
     }
@@ -61,10 +61,10 @@ pub mod gpass {
     /// Admin cat set the new update authority
     pub fn set_update_authority(ctx: Context<UpdateParam>, update_auth: Pubkey) -> Result<()> {
         let authority = &ctx.accounts.authority;
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
 
-        require_keys_eq!(authority.key(), settings.admin, GpassError::AccessDenied);
-        settings.update_auth = update_auth;
+        require_keys_eq!(authority.key(), gpass_info.admin, GpassError::AccessDenied);
+        gpass_info.update_auth = update_auth;
 
         Ok(())
     }
@@ -72,16 +72,16 @@ pub mod gpass {
     /// Update authority can set the new burn period value.
     pub fn update_burn_period(ctx: Context<UpdateParam>, burn_period: u64) -> Result<()> {
         let authority = &ctx.accounts.authority;
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
 
         require_keys_eq!(
             authority.key(),
-            settings.update_auth,
+            gpass_info.update_auth,
             GpassError::AccessDenied
         );
         require_neq!(burn_period, 0, GpassError::InvalidBurnPeriodValue);
 
-        settings.burn_period = burn_period;
+        gpass_info.burn_period = burn_period;
 
         Ok(())
     }
@@ -89,11 +89,11 @@ pub mod gpass {
     /// Update authority can set the new minters list.
     pub fn update_minters(ctx: Context<UpdateParam>, minters: Vec<Pubkey>) -> Result<()> {
         let authority = &ctx.accounts.authority;
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
 
         require_keys_eq!(
             authority.key(),
-            settings.update_auth,
+            gpass_info.update_auth,
             GpassError::AccessDenied
         );
         require!(
@@ -101,7 +101,7 @@ pub mod gpass {
             GpassError::MaxMintersSizeExceeded
         );
 
-        settings.minters = minters;
+        gpass_info.minters = minters;
 
         Ok(())
     }
@@ -109,11 +109,11 @@ pub mod gpass {
     /// Update authority can set the new burner list.
     pub fn update_burners(ctx: Context<UpdateParam>, burners: Vec<Pubkey>) -> Result<()> {
         let authority = &ctx.accounts.authority;
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
 
         require_keys_eq!(
             authority.key(),
-            settings.update_auth,
+            gpass_info.update_auth,
             GpassError::AccessDenied
         );
         require!(
@@ -121,7 +121,7 @@ pub mod gpass {
             GpassError::MaxBurnersSizeExceeded
         );
 
-        settings.burners = burners;
+        gpass_info.burners = burners;
 
         Ok(())
     }
@@ -146,23 +146,23 @@ pub mod gpass {
     /// Mint the amount of GPASS to user wallet. Available only for minters.
     /// There is trying to burn overdues before minting.
     pub fn mint_to(ctx: Context<MintTo>, amount: u64) -> Result<()> {
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
         let authority = &ctx.accounts.authority;
         let to = &mut ctx.accounts.to;
         let clock = Clock::get()?;
 
         require_neq!(amount, 0, GpassError::ZeroMintAmount);
-        if !settings.minters.contains(authority.key) {
+        if !gpass_info.minters.contains(authority.key) {
             return Err(GpassError::InvalidMintAuthority.into());
         }
 
         // Try to burn amount before mint
         let time_passed = utils::time_passed(clock.unix_timestamp, to.last_burned)?;
-        if time_passed < settings.burn_period {
+        if time_passed < gpass_info.burn_period {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {
             msg!("Burn period passed, {} of GPASS burned", to.amount);
-            settings.total_amount = settings
+            gpass_info.total_amount = gpass_info
                 .total_amount
                 .checked_sub(to.amount)
                 .ok_or(GpassError::Overflow)?;
@@ -172,7 +172,7 @@ pub mod gpass {
 
         msg!("Mint {} gpass to wallet {}", amount, to.key());
         to.amount = to.amount.checked_add(amount).ok_or(GpassError::Overflow)?;
-        settings.total_amount = settings
+        gpass_info.total_amount = gpass_info
             .total_amount
             .checked_add(amount)
             .ok_or(GpassError::Overflow)?;
@@ -183,23 +183,23 @@ pub mod gpass {
     /// Burn the amount of GPASS from user wallet. Available only for burners.
     /// There is trying to burn overdues before burning.
     pub fn burn(ctx: Context<Burn>, amount: u64) -> Result<()> {
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
         let authority = &ctx.accounts.authority;
         let from = &mut ctx.accounts.from;
         let clock = Clock::get()?;
 
         require_neq!(amount, 0, GpassError::ZeroBurnAmount);
-        if !settings.burners.contains(authority.key) {
+        if !gpass_info.burners.contains(authority.key) {
             return Err(GpassError::InvalidBurnAuthority.into());
         }
 
         // Try to burn amount before mint
         let time_passed = utils::time_passed(clock.unix_timestamp, from.last_burned)?;
-        if time_passed < settings.burn_period {
+        if time_passed < gpass_info.burn_period {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {
             msg!("Burn period passed, {} of GPASS burned", from.amount);
-            settings.total_amount = settings
+            gpass_info.total_amount = gpass_info
                 .total_amount
                 .checked_sub(from.amount)
                 .ok_or(GpassError::Overflow)?;
@@ -212,7 +212,7 @@ pub mod gpass {
         } else {
             msg!("Burn {} gpass from wallet {}", amount, from.key());
             from.amount = from.amount.checked_sub(amount).unwrap_or(0);
-            settings.total_amount = settings
+            gpass_info.total_amount = gpass_info
                 .total_amount
                 .checked_sub(amount)
                 .ok_or(GpassError::Overflow)?;
@@ -223,16 +223,16 @@ pub mod gpass {
 
     /// Everyone in any time can synchronize user GPASS balance and burn overdues.
     pub fn try_burn_in_period(ctx: Context<BurnInPeriod>) -> Result<()> {
-        let settings = &mut ctx.accounts.settings;
+        let gpass_info = &mut ctx.accounts.gpass_info;
         let wallet = &mut ctx.accounts.wallet;
         let clock = Clock::get()?;
 
         let time_passed = utils::time_passed(clock.unix_timestamp, wallet.last_burned)?;
-        if time_passed < settings.burn_period {
+        if time_passed < gpass_info.burn_period {
             msg!("Burn period not yet passed, GPASS not burned");
         } else {
             msg!("Burn period passed, {} of GPASS burned", wallet.amount);
-            settings.total_amount = settings
+            gpass_info.total_amount = gpass_info
                 .total_amount
                 .checked_sub(wallet.amount)
                 .ok_or(GpassError::Overflow)?;

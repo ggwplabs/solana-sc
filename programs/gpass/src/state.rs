@@ -10,7 +10,7 @@ pub const USER_WALLET_SEED: &str = "user_gpass_wallet";
 
 #[account]
 #[derive(Default, Debug)]
-pub struct GpassSettings {
+pub struct GpassInfo {
     pub admin: Pubkey,
     pub update_auth: Pubkey,
     pub burn_period: u64,
@@ -19,7 +19,7 @@ pub struct GpassSettings {
     pub burners: Vec<Pubkey>,
 }
 
-impl GpassSettings {
+impl GpassInfo {
     pub const LEN: usize = DESCRIMINATOR_LEN +
         32 + // admin pk
         32 + // update auth
