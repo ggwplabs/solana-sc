@@ -1,4 +1,5 @@
 //! CLI Client for interacting with the smart contracts
+use crate::commands::freezing::get_freezing_commands;
 use anchor_client::{
     solana_sdk::{
         commitment_config::CommitmentConfig, pubkey::Pubkey, signature::read_keypair_file,
@@ -17,6 +18,7 @@ mod handlers;
 fn main() {
     let app = app::get_clap_app(crate_name!(), crate_description!(), crate_version!());
     let app = app.subcommand(get_gpass_commands());
+    let app = app.subcommand(get_freezing_commands());
     let app_matches = app.get_matches();
 
     let config = if let Some(config_path) = app_matches.value_of("config") {
@@ -39,6 +41,18 @@ fn main() {
                 Pubkey::from_str(&config.programs.gpass).expect("Error in parsing program id"),
             )
             .expect("GPASS handle error");
+        }
+
+        (commands::CMDS_FREEZING, Some(cmd_matches)) => {
+            handlers::freezing::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.freezing)
+                    .expect("Error in parsing freezing program id"),
+                Pubkey::from_str(&config.programs.gpass)
+                    .expect("Error in parsing gpass program id"),
+            )
+            .expect("Freezing handle error");
         }
 
         _ => {

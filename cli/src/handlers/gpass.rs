@@ -6,7 +6,7 @@ use anchor_client::ClientError;
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client, Program};
 use clap::{value_t_or_exit, values_t};
 use clap::{ArgMatches, Error};
-use gpass::state::{Settings, Wallet};
+use gpass::state::{GpassSettings, Wallet};
 
 pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> Result<(), Error> {
     let program = client.program(program_id);
@@ -112,7 +112,8 @@ pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> 
 
         (commands::gpass::CMD_SHOW_SETTINGS, Some(arg_matches)) => {
             let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
-            let settings_data: Settings = program.account(settings).expect("Get settings error");
+            let settings_data: GpassSettings =
+                program.account(settings).expect("Get settings error");
             println!("Settings data: {:?}", settings_data);
             Ok(())
         }
@@ -123,7 +124,6 @@ pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> 
             let (wallet, _bump) = Pubkey::find_program_address(
                 &[
                     gpass::state::USER_WALLET_SEED.as_bytes(),
-                    program.id().as_ref(),
                     settings.as_ref(),
                     user.as_ref(),
                 ],
@@ -268,7 +268,6 @@ fn cmd_create_wallet(program: &Program, settings: Pubkey, user: Pubkey) -> Resul
     let (wallet, _bump) = Pubkey::find_program_address(
         &[
             gpass::state::USER_WALLET_SEED.as_bytes(),
-            program.id().as_ref(),
             settings.as_ref(),
             user.as_ref(),
         ],
