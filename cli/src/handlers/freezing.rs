@@ -8,7 +8,7 @@ use anchor_client::{solana_sdk::pubkey::Pubkey, Client, Program};
 use clap::{value_t_or_exit, values_t_or_exit};
 use clap::{ArgMatches, Error};
 use freezing::state::{
-    FreezingParams, RewardTableRow, UserInfo, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED,
+    FreezingInfo, RewardTableRow, UserInfo, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED,
 };
 use spl_token::ui_amount_to_amount;
 
@@ -25,7 +25,7 @@ pub fn handle(
             println!("Commad initialize");
             let update_auth = value_t_or_exit!(arg_matches, "update_auth", Pubkey);
             let ggwp_token = value_t_or_exit!(arg_matches, "ggwp_token", Pubkey);
-            let gpass_settings = value_t_or_exit!(arg_matches, "gpass_settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let accumulative_fund = value_t_or_exit!(arg_matches, "accumulative_fund", Pubkey);
             let reward_period = value_t_or_exit!(arg_matches, "reward_period", i64);
             let royalty = value_t_or_exit!(arg_matches, "royalty", u8);
@@ -48,7 +48,7 @@ pub fn handle(
                 &program,
                 update_auth,
                 ggwp_token,
-                gpass_settings,
+                gpass_info,
                 accumulative_fund,
                 reward_period,
                 royalty,
@@ -63,18 +63,18 @@ pub fn handle(
         }
 
         (commands::freezing::CMD_UPDATE_ADMIN, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let admin = value_t_or_exit!(arg_matches, "admin", Pubkey);
-            cmd_update_admin(&program, params, admin).expect("Update admin error");
+            cmd_update_admin(&program, freezing_info, admin).expect("Update admin error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::freezing::CMD_SET_UPDATE_AUTHORITY, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let update_authority = value_t_or_exit!(arg_matches, "update_authority", Pubkey);
-            cmd_set_update_authority(&program, params, update_authority)
+            cmd_set_update_authority(&program, freezing_info, update_authority)
                 .expect("Set update authority error");
 
             println!("Successful");
@@ -82,18 +82,18 @@ pub fn handle(
         }
 
         (commands::freezing::CMD_UPDATE_ROYALTY, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let royalty = value_t_or_exit!(arg_matches, "royalty", u8);
-            cmd_update_royalty(&program, params, royalty).expect("Update royalty error");
+            cmd_update_royalty(&program, freezing_info, royalty).expect("Update royalty error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::freezing::CMD_UPDATE_UNFREEZE_ROYALTY, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let unfreeze_royalty = value_t_or_exit!(arg_matches, "unfreeze_royalty", u8);
-            cmd_update_unfreeze_royalty(&program, params, unfreeze_royalty)
+            cmd_update_unfreeze_royalty(&program, freezing_info, unfreeze_royalty)
                 .expect("Update unfreeze royalty error");
 
             println!("Successful");
@@ -101,9 +101,9 @@ pub fn handle(
         }
 
         (commands::freezing::CMD_UPDATE_UNFREEZE_LOCK_PERIOD, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let unfreeze_lock_period = value_t_or_exit!(arg_matches, "unfreeze_lock_period", i64);
-            cmd_update_unfreeze_lock_period(&program, params, unfreeze_lock_period)
+            cmd_update_unfreeze_lock_period(&program, freezing_info, unfreeze_lock_period)
                 .expect("Update unfreeze lock period error");
 
             println!("Successful");
@@ -111,9 +111,9 @@ pub fn handle(
         }
 
         (commands::freezing::CMD_UPDATE_REWARD_PERIOD, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let reward_period = value_t_or_exit!(arg_matches, "reward_period", i64);
-            cmd_update_reward_period(&program, params, reward_period)
+            cmd_update_reward_period(&program, freezing_info, reward_period)
                 .expect("Update reward period error");
 
             println!("Successful");
@@ -121,7 +121,7 @@ pub fn handle(
         }
 
         (commands::freezing::CMD_UPDATE_REWARD_TABLE, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
 
             let reward_table_ggwp = values_t_or_exit!(arg_matches, "reward_table_ggwp", u64);
             let reward_table_gpass = values_t_or_exit!(arg_matches, "reward_table_gpass", u64);
@@ -135,7 +135,7 @@ pub fn handle(
                 })
                 .collect();
 
-            cmd_update_reward_table(&program, params, reward_table)
+            cmd_update_reward_table(&program, freezing_info, reward_table)
                 .expect("Update reward table error");
 
             println!("Successful");
@@ -143,45 +143,47 @@ pub fn handle(
         }
 
         (commands::freezing::CMD_FREEZE, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let amount = value_t_or_exit!(arg_matches, "amount", f64);
             let amount = ui_amount_to_amount(amount, 9);
-            cmd_freeze(&program, gpass_program_id, params, amount).expect("Freeze error");
+            cmd_freeze(&program, gpass_program_id, freezing_info, amount).expect("Freeze error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::freezing::CMD_WITHDRAW_GPASS, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
-            cmd_withdraw_gpass(&program, gpass_program_id, params).expect("Withdraw gpass error");
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
+            cmd_withdraw_gpass(&program, gpass_program_id, freezing_info)
+                .expect("Withdraw gpass error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::freezing::CMD_UNFREEZE, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
-            cmd_unfreeze(&program, gpass_program_id, params).expect("Unfreeze error");
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
+            cmd_unfreeze(&program, gpass_program_id, freezing_info).expect("Unfreeze error");
 
             println!("Successful");
             Ok(())
         }
 
-        (commands::freezing::CMD_SHOW_PARAMS, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
-            let params_data: FreezingParams = program.account(params).expect("Get params error");
-            println!("Freezing params data: {:?}", params_data);
+        (commands::freezing::CMD_SHOW_INFO, Some(arg_matches)) => {
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
+            let freezing_info_data: FreezingInfo =
+                program.account(freezing_info).expect("Get info error");
+            println!("Freezing info data: {:?}", freezing_info_data);
             Ok(())
         }
 
         (commands::freezing::CMD_SHOW_USER_INFO, Some(arg_matches)) => {
-            let params = value_t_or_exit!(arg_matches, "params", Pubkey);
+            let freezing_info = value_t_or_exit!(arg_matches, "freezing_info", Pubkey);
             let user = value_t_or_exit!(arg_matches, "user", Pubkey);
             let (user_info, _bump) = Pubkey::find_program_address(
                 &[
                     freezing::state::USER_INFO_SEED.as_bytes(),
-                    params.as_ref(),
+                    freezing_info.as_ref(),
                     user.as_ref(),
                 ],
                 &program.id(),
@@ -211,7 +213,7 @@ fn cmd_initialize(
     program: &Program,
     update_auth: Pubkey,
     ggwp_token: Pubkey,
-    gpass_settings: Pubkey,
+    gpass_info: Pubkey,
     accumulative_fund: Pubkey,
     reward_period: i64,
     royalty: u8,
@@ -219,21 +221,24 @@ fn cmd_initialize(
     unfreeze_lock_period: i64,
     reward_table: Vec<RewardTableRow>,
 ) -> Result<(), ClientError> {
-    let params = Keypair::new();
-    println!("New Freezing params Pubkey: {}", params.pubkey());
+    let freezing_info = Keypair::new();
+    println!("New Freezing info Pubkey: {}", freezing_info.pubkey());
 
     let (gpass_mint_auth, _) = Pubkey::find_program_address(
         &[
             GPASS_MINT_AUTH_SEED.as_bytes(),
-            params.pubkey().as_ref(),
-            gpass_settings.as_ref(),
+            freezing_info.pubkey().as_ref(),
+            gpass_info.as_ref(),
         ],
         &program.id(),
     );
     println!("GPASS mint auth: {}", gpass_mint_auth);
 
     let (treasury_auth, _) = Pubkey::find_program_address(
-        &[TREASURY_AUTH_SEED.as_bytes(), params.pubkey().as_ref()],
+        &[
+            TREASURY_AUTH_SEED.as_bytes(),
+            freezing_info.pubkey().as_ref(),
+        ],
         &program.id(),
     );
 
@@ -243,11 +248,11 @@ fn cmd_initialize(
         .request()
         .accounts(freezing::accounts::Initialize {
             admin: program.payer(),
-            freezing_params: params.pubkey(),
+            freezing_info: freezing_info.pubkey(),
             gpass_mint_auth: gpass_mint_auth,
             treasury_auth: treasury_auth,
             ggwp_token: ggwp_token,
-            gpass_settings: gpass_settings,
+            gpass_info: gpass_info,
             accumulative_fund: accumulative_fund,
             treasury: treasury,
             system_program: system_program::ID,
@@ -261,18 +266,22 @@ fn cmd_initialize(
             unfreeze_lock_period: unfreeze_lock_period,
             reward_table: reward_table,
         })
-        .signer(&params)
+        .signer(&freezing_info)
         .send()?;
 
     Ok(())
 }
 
-fn cmd_update_admin(program: &Program, params: Pubkey, admin: Pubkey) -> Result<(), ClientError> {
+fn cmd_update_admin(
+    program: &Program,
+    freezing_info: Pubkey,
+    admin: Pubkey,
+) -> Result<(), ClientError> {
     program
         .request()
         .accounts(freezing::accounts::UpdateParam {
             authority: program.payer(),
-            freezing_params: params,
+            freezing_info: freezing_info,
         })
         .args(freezing::instruction::UpdateAdmin { admin: admin })
         .send()?;
@@ -282,14 +291,14 @@ fn cmd_update_admin(program: &Program, params: Pubkey, admin: Pubkey) -> Result<
 
 fn cmd_set_update_authority(
     program: &Program,
-    params: Pubkey,
+    freezing_info: Pubkey,
     update_auth: Pubkey,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(freezing::accounts::UpdateParam {
             authority: program.payer(),
-            freezing_params: params,
+            freezing_info: freezing_info,
         })
         .args(freezing::instruction::SetUpdateAuthority {
             update_auth: update_auth,
@@ -299,12 +308,16 @@ fn cmd_set_update_authority(
     Ok(())
 }
 
-fn cmd_update_royalty(program: &Program, params: Pubkey, royalty: u8) -> Result<(), ClientError> {
+fn cmd_update_royalty(
+    program: &Program,
+    freezing_info: Pubkey,
+    royalty: u8,
+) -> Result<(), ClientError> {
     program
         .request()
         .accounts(freezing::accounts::UpdateParam {
             authority: program.payer(),
-            freezing_params: params,
+            freezing_info: freezing_info,
         })
         .args(freezing::instruction::UpdateRoyalty { royalty: royalty })
         .send()?;
@@ -314,14 +327,14 @@ fn cmd_update_royalty(program: &Program, params: Pubkey, royalty: u8) -> Result<
 
 fn cmd_update_unfreeze_royalty(
     program: &Program,
-    params: Pubkey,
+    freezing_info: Pubkey,
     unfreeze_royalty: u8,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(freezing::accounts::UpdateParam {
             authority: program.payer(),
-            freezing_params: params,
+            freezing_info: freezing_info,
         })
         .args(freezing::instruction::UpdateUnfreezeRoyalty {
             unfreeze_royalty: unfreeze_royalty,
@@ -333,14 +346,14 @@ fn cmd_update_unfreeze_royalty(
 
 fn cmd_update_unfreeze_lock_period(
     program: &Program,
-    params: Pubkey,
+    freezing_info: Pubkey,
     unfreeze_lock_period: i64,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(freezing::accounts::UpdateParam {
             authority: program.payer(),
-            freezing_params: params,
+            freezing_info: freezing_info,
         })
         .args(freezing::instruction::UpdateUnfreezeLockPeriod {
             unfreeze_lock_period: unfreeze_lock_period,
@@ -352,14 +365,14 @@ fn cmd_update_unfreeze_lock_period(
 
 fn cmd_update_reward_period(
     program: &Program,
-    params: Pubkey,
+    freezing_info: Pubkey,
     reward_period: i64,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(freezing::accounts::UpdateParam {
             authority: program.payer(),
-            freezing_params: params,
+            freezing_info: freezing_info,
         })
         .args(freezing::instruction::UpdateRewardPeriod {
             reward_period: reward_period,
@@ -371,14 +384,14 @@ fn cmd_update_reward_period(
 
 fn cmd_update_reward_table(
     program: &Program,
-    params: Pubkey,
+    freezing_info: Pubkey,
     reward_table: Vec<RewardTableRow>,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(freezing::accounts::UpdateParam {
             authority: program.payer(),
-            freezing_params: params,
+            freezing_info: freezing_info,
         })
         .args(freezing::instruction::UpdateRewardTable {
             reward_table: reward_table,
@@ -391,14 +404,14 @@ fn cmd_update_reward_table(
 fn cmd_freeze(
     freezing_program: &Program,
     gpass_program_id: Pubkey,
-    params: Pubkey,
+    freezing_info: Pubkey,
     amount: u64,
 ) -> Result<(), ClientError> {
-    let freezing_params_data: FreezingParams = freezing_program.account(params)?;
+    let freezing_info_data: FreezingInfo = freezing_program.account(freezing_info)?;
     let (user_info, _) = Pubkey::find_program_address(
         &[
             freezing::state::USER_INFO_SEED.as_bytes(),
-            params.as_ref(),
+            freezing_info.as_ref(),
             freezing_program.payer().as_ref(),
         ],
         &freezing_program.id(),
@@ -407,8 +420,8 @@ fn cmd_freeze(
     let (gpass_mint_auth, _) = Pubkey::find_program_address(
         &[
             GPASS_MINT_AUTH_SEED.as_bytes(),
-            params.as_ref(),
-            freezing_params_data.gpass_settings.as_ref(),
+            freezing_info.as_ref(),
+            freezing_info_data.gpass_info.as_ref(),
         ],
         &freezing_program.id(),
     );
@@ -416,7 +429,7 @@ fn cmd_freeze(
     let (user_gpass_wallet, _) = Pubkey::find_program_address(
         &[
             gpass::state::USER_WALLET_SEED.as_bytes(),
-            freezing_params_data.gpass_settings.as_ref(),
+            freezing_info_data.gpass_info.as_ref(),
             freezing_program.payer().as_ref(),
         ],
         &gpass_program_id,
@@ -424,7 +437,7 @@ fn cmd_freeze(
 
     let user_ggwp_wallet = get_or_create_token_account(
         &freezing_program,
-        freezing_params_data.ggwp_token,
+        freezing_info_data.ggwp_token,
         freezing_program.payer(),
     )?;
 
@@ -433,13 +446,13 @@ fn cmd_freeze(
         .accounts(freezing::accounts::Freeze {
             user: freezing_program.payer(),
             user_info: user_info,
-            freezing_params: params,
+            freezing_info: freezing_info,
             user_ggwp_wallet: user_ggwp_wallet,
-            gpass_settings: freezing_params_data.gpass_settings,
+            gpass_info: freezing_info_data.gpass_info,
             gpass_mint_auth: gpass_mint_auth,
             user_gpass_wallet: user_gpass_wallet,
-            accumulative_fund: freezing_params_data.accumulative_fund,
-            treasury: freezing_params_data.treasury,
+            accumulative_fund: freezing_info_data.accumulative_fund,
+            treasury: freezing_info_data.treasury,
             gpass_program: gpass_program_id,
             system_program: system_program::ID,
             token_program: spl_token::id(),
@@ -453,13 +466,13 @@ fn cmd_freeze(
 fn cmd_withdraw_gpass(
     freezing_program: &Program,
     gpass_program_id: Pubkey,
-    params: Pubkey,
+    freezing_info: Pubkey,
 ) -> Result<(), ClientError> {
-    let freezing_params_data: FreezingParams = freezing_program.account(params)?;
+    let freezing_info_data: FreezingInfo = freezing_program.account(freezing_info)?;
     let (user_info, _) = Pubkey::find_program_address(
         &[
             freezing::state::USER_INFO_SEED.as_bytes(),
-            params.as_ref(),
+            freezing_info.as_ref(),
             freezing_program.payer().as_ref(),
         ],
         &freezing_program.id(),
@@ -468,8 +481,8 @@ fn cmd_withdraw_gpass(
     let (gpass_mint_auth, _) = Pubkey::find_program_address(
         &[
             GPASS_MINT_AUTH_SEED.as_bytes(),
-            params.as_ref(),
-            freezing_params_data.gpass_settings.as_ref(),
+            freezing_info.as_ref(),
+            freezing_info_data.gpass_info.as_ref(),
         ],
         &freezing_program.id(),
     );
@@ -477,7 +490,7 @@ fn cmd_withdraw_gpass(
     let (user_gpass_wallet, _) = Pubkey::find_program_address(
         &[
             gpass::state::USER_WALLET_SEED.as_bytes(),
-            freezing_params_data.gpass_settings.as_ref(),
+            freezing_info_data.gpass_info.as_ref(),
             freezing_program.payer().as_ref(),
         ],
         &gpass_program_id,
@@ -488,8 +501,8 @@ fn cmd_withdraw_gpass(
         .accounts(freezing::accounts::Withdraw {
             user: freezing_program.payer(),
             user_info: user_info,
-            freezing_params: params,
-            gpass_settings: freezing_params_data.gpass_settings,
+            freezing_info: freezing_info,
+            gpass_info: freezing_info_data.gpass_info,
             gpass_mint_auth: gpass_mint_auth,
             user_gpass_wallet: user_gpass_wallet,
             gpass_program: gpass_program_id,
@@ -503,13 +516,13 @@ fn cmd_withdraw_gpass(
 fn cmd_unfreeze(
     freezing_program: &Program,
     gpass_program_id: Pubkey,
-    params: Pubkey,
+    freezing_info: Pubkey,
 ) -> Result<(), ClientError> {
-    let freezing_params_data: FreezingParams = freezing_program.account(params)?;
+    let freezing_info_data: FreezingInfo = freezing_program.account(freezing_info)?;
     let (user_info, _) = Pubkey::find_program_address(
         &[
             freezing::state::USER_INFO_SEED.as_bytes(),
-            params.as_ref(),
+            freezing_info.as_ref(),
             freezing_program.payer().as_ref(),
         ],
         &freezing_program.id(),
@@ -518,8 +531,8 @@ fn cmd_unfreeze(
     let (gpass_mint_auth, _) = Pubkey::find_program_address(
         &[
             GPASS_MINT_AUTH_SEED.as_bytes(),
-            params.as_ref(),
-            freezing_params_data.gpass_settings.as_ref(),
+            freezing_info.as_ref(),
+            freezing_info_data.gpass_info.as_ref(),
         ],
         &freezing_program.id(),
     );
@@ -527,7 +540,7 @@ fn cmd_unfreeze(
     let (user_gpass_wallet, _) = Pubkey::find_program_address(
         &[
             gpass::state::USER_WALLET_SEED.as_bytes(),
-            freezing_params_data.gpass_settings.as_ref(),
+            freezing_info_data.gpass_info.as_ref(),
             freezing_program.payer().as_ref(),
         ],
         &gpass_program_id,
@@ -535,12 +548,12 @@ fn cmd_unfreeze(
 
     let user_ggwp_wallet = get_or_create_token_account(
         &freezing_program,
-        freezing_params_data.ggwp_token,
+        freezing_info_data.ggwp_token,
         freezing_program.payer(),
     )?;
 
     let (treasury_auth, _) = Pubkey::find_program_address(
-        &[TREASURY_AUTH_SEED.as_bytes(), params.as_ref()],
+        &[TREASURY_AUTH_SEED.as_bytes(), freezing_info.as_ref()],
         &freezing_program.id(),
     );
 
@@ -549,13 +562,13 @@ fn cmd_unfreeze(
         .accounts(freezing::accounts::Unfreeze {
             user: freezing_program.payer(),
             user_info: user_info,
-            freezing_params: params,
+            freezing_info: freezing_info,
             user_ggwp_wallet: user_ggwp_wallet,
-            gpass_settings: freezing_params_data.gpass_settings,
+            gpass_info: freezing_info_data.gpass_info,
             gpass_mint_auth: gpass_mint_auth,
             user_gpass_wallet: user_gpass_wallet,
-            accumulative_fund: freezing_params_data.accumulative_fund,
-            treasury: freezing_params_data.treasury,
+            accumulative_fund: freezing_info_data.accumulative_fund,
+            treasury: freezing_info_data.treasury,
             treasury_auth: treasury_auth,
             gpass_program: gpass_program_id,
             token_program: spl_token::id(),

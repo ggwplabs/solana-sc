@@ -20,7 +20,7 @@ describe("GPASS authority tests", () => {
   ];
   const burnPeriod = 100;
 
-  const settings = Keypair.generate();
+  const gpassInfo = Keypair.generate();
   before(async () => {
     await utils.airdropSol(program.provider.connection, admin.publicKey, 100 * LAMPORTS_PER_SOL);
     await utils.airdropSol(program.provider.connection, updateAuth.publicKey, 100 * LAMPORTS_PER_SOL);
@@ -32,19 +32,19 @@ describe("GPASS authority tests", () => {
     )
       .accounts({
         admin: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([admin, settings])
+      .signers([admin, gpassInfo])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.ok(settingsData.admin.equals(admin.publicKey));
-    assert.ok(settingsData.updateAuth.equals(updateAuth.publicKey));
-    assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
-    assert.equal(settingsData.totalAmount.toNumber(), 0);
-    assert.deepStrictEqual(settingsData.minters, mintersPK);
-    assert.deepStrictEqual(settingsData.burners, burnersPK);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.ok(gpassInfoData.admin.equals(admin.publicKey));
+    assert.ok(gpassInfoData.updateAuth.equals(updateAuth.publicKey));
+    assert.equal(gpassInfoData.burnPeriod.toNumber(), burnPeriod);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), 0);
+    assert.deepStrictEqual(gpassInfoData.minters, mintersPK);
+    assert.deepStrictEqual(gpassInfoData.burners, burnersPK);
   });
 
   const newAdmin = Keypair.generate();
@@ -54,7 +54,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.updateAdmin(newAdmin.publicKey)
       .accounts({
         authority: invalidAdmin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([invalidAdmin])
       .rpc(),
@@ -72,13 +72,13 @@ describe("GPASS authority tests", () => {
     await program.methods.updateAdmin(newAdmin.publicKey)
       .accounts({
         authority: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([admin])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.ok(settingsData.admin.equals(newAdmin.publicKey));
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.ok(gpassInfoData.admin.equals(newAdmin.publicKey));
   });
 
   const newUpdAuthority = Keypair.generate();
@@ -88,7 +88,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.setUpdateAuthority(newUpdAuthority.publicKey)
       .accounts({
         authority: invalidUpdateAuth.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([invalidUpdateAuth])
       .rpc(),
@@ -106,13 +106,13 @@ describe("GPASS authority tests", () => {
     await program.methods.setUpdateAuthority(newUpdAuthority.publicKey)
       .accounts({
         authority: newAdmin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([newAdmin])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.ok(settingsData.updateAuth.equals(newUpdAuthority.publicKey));
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.ok(gpassInfoData.updateAuth.equals(newUpdAuthority.publicKey));
   });
 
   it("update burn period with invalid authority", async () => {
@@ -122,7 +122,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.updateBurnPeriod(new anchor.BN(newBurnPeriod))
       .accounts({
         authority: invalidUpdateAuth.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([invalidUpdateAuth])
       .rpc(),
@@ -141,7 +141,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.updateBurnPeriod(new anchor.BN(invalidBurnPeriod))
       .accounts({
         authority: newUpdAuthority.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([newUpdAuthority])
       .rpc(),
@@ -160,13 +160,13 @@ describe("GPASS authority tests", () => {
     await program.methods.updateBurnPeriod(new anchor.BN(newBurnPeriod))
       .accounts({
         authority: newUpdAuthority.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([newUpdAuthority])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.equal(settingsData.burnPeriod.toNumber(), newBurnPeriod);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.equal(gpassInfoData.burnPeriod.toNumber(), newBurnPeriod);
   });
 
   it("update minters with invalid authority", async () => {
@@ -176,7 +176,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.updateMinters(newMinters)
       .accounts({
         authority: invalidUpdateAuth.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([invalidUpdateAuth])
       .rpc(),
@@ -198,7 +198,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.updateMinters(newMinters)
       .accounts({
         authority: newUpdAuthority.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([newUpdAuthority])
       .rpc(),
@@ -219,13 +219,13 @@ describe("GPASS authority tests", () => {
     await program.methods.updateMinters(newMinters)
       .accounts({
         authority: newUpdAuthority.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([newUpdAuthority])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.deepStrictEqual(settingsData.minters, newMinters);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.deepStrictEqual(gpassInfoData.minters, newMinters);
   });
 
   it("update burners with invalid authority", async () => {
@@ -235,7 +235,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.updateBurners(newBurners)
       .accounts({
         authority: invalidUpdateAuth.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([invalidUpdateAuth])
       .rpc(),
@@ -259,7 +259,7 @@ describe("GPASS authority tests", () => {
     await assert.rejects(program.methods.updateBurners(newBurners)
       .accounts({
         authority: newUpdAuthority.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([newUpdAuthority])
       .rpc(),
@@ -280,12 +280,12 @@ describe("GPASS authority tests", () => {
     await program.methods.updateBurners(newBurners)
       .accounts({
         authority: newUpdAuthority.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
       })
       .signers([newUpdAuthority])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.deepStrictEqual(settingsData.minters, newBurners);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.deepStrictEqual(gpassInfoData.minters, newBurners);
   });
 });

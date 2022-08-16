@@ -46,9 +46,9 @@ describe("Freezing functional tests", () => {
     )
       .accounts({
         admin: fixture.admin.publicKey,
-        freezingParams: fixture.freezing.params.publicKey,
+        freezingInfo: fixture.freezing.info.publicKey,
         accumulativeFund: fixture.freezing.accumulativeFund,
-        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        gpassInfo: fixture.freezing.gpassInfo.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         treasury: fixture.freezing.treasury,
         treasuryAuth: fixture.freezing.treasuryAuth,
@@ -56,7 +56,7 @@ describe("Freezing functional tests", () => {
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([fixture.admin, fixture.freezing.params])
+      .signers([fixture.admin, fixture.freezing.info])
       .rpc();
   });
 
@@ -68,8 +68,8 @@ describe("Freezing functional tests", () => {
         userInfo: fixture.user.info,
         userGgwpWallet: fixture.user.ggwpWallet,
         userGpassWallet: fixture.user.gpassWallet,
-        freezingParams: fixture.freezing.params.publicKey,
-        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        freezingInfo: fixture.freezing.info.publicKey,
+        gpassInfo: fixture.freezing.gpassInfo.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         accumulativeFund: fixture.freezing.accumulativeFund,
         treasury: fixture.freezing.treasury,
@@ -86,10 +86,10 @@ describe("Freezing functional tests", () => {
     assert.equal(userWalletData.amount.toNumber(), 5);
     assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.freezing.accumulativeFund), utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.freezing.treasury), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
-    const freezingParamsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.ok(utils.assertWithPrecission(freezingParamsData.totalFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
-    const gpassSettingsData = await gpassProgram.account.gpassSettings.fetch(fixture.freezing.gpassSettings.publicKey);
-    assert.equal(gpassSettingsData.totalAmount.toNumber(), 5);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.ok(utils.assertWithPrecission(freezingInfoData.totalFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
+    const gpassInfoData = await gpassProgram.account.gpassInfo.fetch(fixture.freezing.gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), 5);
   });
 
   it("User wait two reward periods and withdraw GPASS reward", async () => {
@@ -101,8 +101,8 @@ describe("Freezing functional tests", () => {
         user: fixture.user.kp.publicKey,
         userInfo: fixture.user.info,
         userGpassWallet: fixture.user.gpassWallet,
-        freezingParams: fixture.freezing.params.publicKey,
-        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        freezingInfo: fixture.freezing.info.publicKey,
+        gpassInfo: fixture.freezing.gpassInfo.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         gpassProgram: gpassProgram.programId,
       })
@@ -120,8 +120,8 @@ describe("Freezing functional tests", () => {
         user: fixture.user.kp.publicKey,
         userInfo: fixture.user.info,
         userGpassWallet: fixture.user.gpassWallet,
-        freezingParams: fixture.freezing.params.publicKey,
-        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        freezingInfo: fixture.freezing.info.publicKey,
+        gpassInfo: fixture.freezing.gpassInfo.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         gpassProgram: gpassProgram.programId,
       })
@@ -142,8 +142,8 @@ describe("Freezing functional tests", () => {
         userInfo: fixture.user.info,
         userGgwpWallet: fixture.user.ggwpWallet,
         userGpassWallet: fixture.user.gpassWallet,
-        freezingParams: fixture.freezing.params.publicKey,
-        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        freezingInfo: fixture.freezing.info.publicKey,
+        gpassInfo: fixture.freezing.gpassInfo.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         accumulativeFund: fixture.freezing.accumulativeFund,
         treasury: fixture.freezing.treasury,
@@ -161,9 +161,9 @@ describe("Freezing functional tests", () => {
     assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.freezing.accumulativeFund), utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     assert.equal(await utils.getTokenBalance(fixture.freezing.treasury), 0);
     assert.ok(utils.assertWithPrecission(await utils.getTokenBalance(fixture.user.ggwpWallet), userGGWPBalanceBefore + userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
-    const freezingParamsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.equal(freezingParamsData.totalFreezed.toNumber(), 0);
-    const gpassSettingsData = await gpassProgram.account.gpassSettings.fetch(fixture.freezing.gpassSettings.publicKey);
-    assert.equal(gpassSettingsData.totalAmount.toNumber(), 20);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.equal(freezingInfoData.totalFreezed.toNumber(), 0);
+    const gpassInfoData = await gpassProgram.account.gpassInfo.fetch(fixture.freezing.gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), 20);
   });
 });

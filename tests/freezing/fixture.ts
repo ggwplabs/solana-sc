@@ -14,8 +14,8 @@ export class FreezingTestFixture {
   updateAuth: Keypair;
 
   freezing: {
-    params: Keypair;
-    gpassSettings: Keypair;
+    info: Keypair;
+    gpassInfo: Keypair;
     gpassMintAuth: PublicKey,
     ggwpToken: PublicKey,
     accumulativeFund: PublicKey;
@@ -40,14 +40,14 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
   await utils.airdropSol(freezing.provider.connection, user.publicKey, 200_000_000_000);
   await utils.airdropSol(freezing.provider.connection, updateAuth.publicKey, 200_000_000_000);
 
-  const freezingParams = Keypair.generate();
+  const freezingInfo = Keypair.generate();
 
   const ggwpToken = await utils.createMint(admin.publicKey, 9);
   const accumulativeFund = await utils.createTokenWallet(ggwpToken, admin.publicKey);
   const treasuryAuth = findProgramAddressSync(
     [
       utf8.encode(utils.TREASURY_AUTH_SEED),
-      freezingParams.publicKey.toBytes(),
+      freezingInfo.publicKey.toBytes(),
     ],
     freezing.programId,
   )[0];
@@ -55,12 +55,12 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
   const userGgwpTokenWallet = await utils.createTokenWallet(ggwpToken, user.publicKey);
   await utils.mintTokens(ggwpToken, admin, userGgwpTokenWallet, 100_000_000_000);
 
-  const gpassSettings = Keypair.generate();
+  const gpassInfo = Keypair.generate();
   const gpassMintAuth = findProgramAddressSync(
     [
       utf8.encode(utils.GPASS_MINT_AUTH_SEED),
-      freezingParams.publicKey.toBytes(),
-      gpassSettings.publicKey.toBytes(),
+      freezingInfo.publicKey.toBytes(),
+      gpassInfo.publicKey.toBytes(),
     ],
     freezing.programId
   )[0];
@@ -73,16 +73,16 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
     [])
     .accounts({
       admin: admin.publicKey,
-      settings: gpassSettings.publicKey,
+      gpassInfo: gpassInfo.publicKey,
       systemProgram: SystemProgram.programId,
     })
-    .signers([admin, gpassSettings])
+    .signers([admin, gpassInfo])
     .rpc();
 
   const userGpassWallet = findProgramAddressSync(
     [
       utf8.encode(utils.USER_WALLET_SEED),
-      gpassSettings.publicKey.toBytes(),
+      gpassInfo.publicKey.toBytes(),
       user.publicKey.toBytes(),
     ],
     gpass.programId,
@@ -90,7 +90,7 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
   const userFreezingInfo = findProgramAddressSync(
     [
       utf8.encode(utils.USER_INFO_SEED),
-      freezingParams.publicKey.toBytes(),
+      freezingInfo.publicKey.toBytes(),
       user.publicKey.toBytes(),
     ],
     freezing.programId,
@@ -100,7 +100,7 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
     .accounts({
       payer: admin.publicKey,
       user: user.publicKey,
-      settings: gpassSettings.publicKey,
+      gpassInfo: gpassInfo.publicKey,
       wallet: userGpassWallet,
       systemProgram: SystemProgram.programId
     })
@@ -112,8 +112,8 @@ export async function prepareFreezingTestFixture(freezing: Program<Freezing>, gp
     updateAuth: updateAuth,
 
     freezing: {
-      params: freezingParams,
-      gpassSettings: gpassSettings,
+      info: freezingInfo,
+      gpassInfo: gpassInfo,
       gpassMintAuth: gpassMintAuth,
       ggwpToken: ggwpToken,
       accumulativeFund: accumulativeFund,

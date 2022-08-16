@@ -32,7 +32,7 @@ describe("GPASS functional tests", () => {
   const user2 = Keypair.generate();
   let user2WalletPK;
 
-  const settings = Keypair.generate();
+  const gpassInfo = Keypair.generate();
   before(async () => {
     await utils.airdropSol(program.provider.connection, user1.publicKey, 100 * LAMPORTS_PER_SOL);
     await utils.airdropSol(program.provider.connection, user2.publicKey, 100 * LAMPORTS_PER_SOL);
@@ -45,24 +45,24 @@ describe("GPASS functional tests", () => {
     )
       .accounts({
         admin: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([admin, settings])
+      .signers([admin, gpassInfo])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.ok(settingsData.admin.equals(admin.publicKey));
-    assert.ok(settingsData.updateAuth.equals(updateAuth.publicKey));
-    assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
-    assert.equal(settingsData.totalAmount.toNumber(), 0);
-    assert.deepStrictEqual(settingsData.minters, mintersPK);
-    assert.deepStrictEqual(settingsData.burners, burnersPK);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.ok(gpassInfoData.admin.equals(admin.publicKey));
+    assert.ok(gpassInfoData.updateAuth.equals(updateAuth.publicKey));
+    assert.equal(gpassInfoData.burnPeriod.toNumber(), burnPeriod);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), 0);
+    assert.deepStrictEqual(gpassInfoData.minters, mintersPK);
+    assert.deepStrictEqual(gpassInfoData.burners, burnersPK);
 
     user1WalletPK = findProgramAddressSync(
       [
         utf8.encode(utils.USER_WALLET_SEED),
-        settings.publicKey.toBytes(),
+        gpassInfo.publicKey.toBytes(),
         user1.publicKey.toBytes(),
       ],
       program.programId
@@ -70,7 +70,7 @@ describe("GPASS functional tests", () => {
     user2WalletPK = findProgramAddressSync(
       [
         utf8.encode(utils.USER_WALLET_SEED),
-        settings.publicKey.toBytes(),
+        gpassInfo.publicKey.toBytes(),
         user2.publicKey.toBytes(),
       ],
       program.programId
@@ -82,7 +82,7 @@ describe("GPASS functional tests", () => {
     await program.methods.createWallet()
       .accounts({
         payer: user1.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         user: user1.publicKey,
         wallet: user1WalletPK,
         systemProgram: SystemProgram.programId,
@@ -102,7 +102,7 @@ describe("GPASS functional tests", () => {
     await program.methods.createWallet()
       .accounts({
         payer: payer.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         user: user2.publicKey,
         wallet: user2WalletPK,
         systemProgram: SystemProgram.programId,
@@ -120,7 +120,7 @@ describe("GPASS functional tests", () => {
     await assert.rejects(program.methods.mintTo(new anchor.BN(amount))
       .accounts({
         authority: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         to: user1WalletPK,
       })
       .signers([admin])
@@ -140,7 +140,7 @@ describe("GPASS functional tests", () => {
     await assert.rejects(program.methods.mintTo(new anchor.BN(amount))
       .accounts({
         authority: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         to: user1WalletPK,
       })
       .signers([admin])
@@ -160,7 +160,7 @@ describe("GPASS functional tests", () => {
     await assert.rejects(program.methods.burn(new anchor.BN(amount))
       .accounts({
         authority: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         from: user1WalletPK,
       })
       .signers([admin])
@@ -180,7 +180,7 @@ describe("GPASS functional tests", () => {
     await assert.rejects(program.methods.burn(new anchor.BN(amount))
       .accounts({
         authority: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         from: user1WalletPK,
       })
       .signers([admin])
@@ -200,7 +200,7 @@ describe("GPASS functional tests", () => {
     await program.methods.mintTo(new anchor.BN(user1Amount))
       .accounts({
         authority: minters[0].publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         to: user1WalletPK,
       })
       .signers([minters[0]])
@@ -208,15 +208,15 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount);
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.equal(settingsData.totalAmount.toNumber(), user1Amount);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), user1Amount);
   });
 
   it("Burn amount of gpass from user1 wallet", async () => {
     await program.methods.burn(new anchor.BN(user1Amount / 2))
       .accounts({
         authority: burners[0].publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         from: user1WalletPK,
       })
       .signers([burners[0]])
@@ -224,8 +224,8 @@ describe("GPASS functional tests", () => {
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount / 2);
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.equal(settingsData.totalAmount.toNumber(), user1Amount / 2);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), user1Amount / 2);
   });
 
   it("Wait burn period and mint gpass to user1 wallet", async () => {
@@ -234,7 +234,7 @@ describe("GPASS functional tests", () => {
     await program.methods.mintTo(new anchor.BN(user1Amount))
       .accounts({
         authority: minters[0].publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         to: user1WalletPK,
       })
       .signers([minters[0]])
@@ -243,8 +243,8 @@ describe("GPASS functional tests", () => {
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount);
     assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.equal(settingsData.totalAmount.toNumber(), user1Amount);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), user1Amount);
   });
 
   it("Wait burn period and burn gpass from user1 wallet", async () => {
@@ -253,7 +253,7 @@ describe("GPASS functional tests", () => {
     await program.methods.burn(new anchor.BN(10))
       .accounts({
         authority: burners[0].publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         from: user1WalletPK,
       })
       .signers([burners[0]])
@@ -262,8 +262,8 @@ describe("GPASS functional tests", () => {
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), 0);
     assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.equal(settingsData.totalAmount.toNumber(), 0);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), 0);
   });
 
   it("Mint gpass to user1 wallet and try burn in period", async () => {
@@ -271,7 +271,7 @@ describe("GPASS functional tests", () => {
     await program.methods.mintTo(new anchor.BN(user1Amount))
       .accounts({
         authority: minters[0].publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         to: user1WalletPK,
       })
       .signers([minters[0]])
@@ -279,7 +279,7 @@ describe("GPASS functional tests", () => {
 
     await program.methods.tryBurnInPeriod()
       .accounts({
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         wallet: user1WalletPK,
       })
       .rpc();
@@ -287,15 +287,15 @@ describe("GPASS functional tests", () => {
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount);
     assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.equal(settingsData.totalAmount.toNumber(), user1Amount);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), user1Amount);
   });
 
   it("Mint gpass to user1 wallet, wait and try burn in period", async () => {
     await program.methods.mintTo(new anchor.BN(user1Amount))
       .accounts({
         authority: minters[0].publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         to: user1WalletPK,
       })
       .signers([minters[0]])
@@ -306,7 +306,7 @@ describe("GPASS functional tests", () => {
     const currentTimeStamp = utils.currentTimestamp();
     await program.methods.tryBurnInPeriod()
       .accounts({
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         wallet: user1WalletPK,
       })
       .rpc();
@@ -314,7 +314,7 @@ describe("GPASS functional tests", () => {
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), 0);
     assert.ok(utils.assertWithPrecission(user1WalletData.lastBurned.toNumber(), currentTimeStamp, 5));
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.equal(settingsData.totalAmount.toNumber(), 0);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), 0);
   });
 });

@@ -6,7 +6,7 @@ use anchor_client::ClientError;
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client, Program};
 use clap::{value_t_or_exit, values_t};
 use clap::{ArgMatches, Error};
-use gpass::state::{GpassSettings, Wallet};
+use gpass::state::{GpassInfo, Wallet};
 
 pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> Result<(), Error> {
     let program = client.program(program_id);
@@ -26,18 +26,18 @@ pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> 
         }
 
         (commands::gpass::CMD_UPDATE_ADMIN, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let admin = value_t_or_exit!(arg_matches, "admin", Pubkey);
-            cmd_update_admin(&program, settings, admin).expect("Update admin error");
+            cmd_update_admin(&program, gpass_info, admin).expect("Update admin error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::gpass::CMD_SET_UPDATE_AUTHORITY, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let update_authority = value_t_or_exit!(arg_matches, "update_authority", Pubkey);
-            cmd_set_update_authority(&program, settings, update_authority)
+            cmd_set_update_authority(&program, gpass_info, update_authority)
                 .expect("Set update authority error");
 
             println!("Successful");
@@ -45,9 +45,9 @@ pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> 
         }
 
         (commands::gpass::CMD_UPDATE_BURN_PERIOD, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let burn_period = value_t_or_exit!(arg_matches, "burn_period", u64);
-            cmd_update_burn_period(&program, settings, burn_period)
+            cmd_update_burn_period(&program, gpass_info, burn_period)
                 .expect("Update burn period error");
 
             println!("Successful");
@@ -55,76 +55,76 @@ pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> 
         }
 
         (commands::gpass::CMD_UPDATE_MINTERS, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let minters = values_t!(arg_matches, "minter", Pubkey).unwrap_or_default();
-            cmd_update_minters(&program, settings, minters).expect("Update minters error");
+            cmd_update_minters(&program, gpass_info, minters).expect("Update minters error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::gpass::CMD_UPDATE_BURNERS, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let burners = values_t!(arg_matches, "burners", Pubkey).unwrap_or_default();
-            cmd_update_burners(&program, settings, burners).expect("Update burners error");
+            cmd_update_burners(&program, gpass_info, burners).expect("Update burners error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::gpass::CMD_CREATE_WALLET, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let user = value_t_or_exit!(arg_matches, "user", Pubkey);
-            cmd_create_wallet(&program, settings, user).expect("Create wallet error");
+            cmd_create_wallet(&program, gpass_info, user).expect("Create wallet error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::gpass::CMD_MINT_TO, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let to = value_t_or_exit!(arg_matches, "to", Pubkey);
             let amount = value_t_or_exit!(arg_matches, "amount", u64);
-            cmd_mint_to(&program, settings, to, amount).expect("Mint to error");
+            cmd_mint_to(&program, gpass_info, to, amount).expect("Mint to error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::gpass::CMD_BURN, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let from = value_t_or_exit!(arg_matches, "from", Pubkey);
             let amount = value_t_or_exit!(arg_matches, "amount", u64);
-            cmd_burn(&program, settings, from, amount).expect("Burn error");
+            cmd_burn(&program, gpass_info, from, amount).expect("Burn error");
 
             println!("Successful");
             Ok(())
         }
 
         (commands::gpass::CMD_TRY_BURN_IN_PERIOD, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let wallet = value_t_or_exit!(arg_matches, "wallet", Pubkey);
-            cmd_try_burn_in_period(&program, settings, wallet).expect("Burn in period error");
+            cmd_try_burn_in_period(&program, gpass_info, wallet).expect("Burn in period error");
 
             println!("Successful");
             Ok(())
         }
 
-        (commands::gpass::CMD_SHOW_SETTINGS, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
-            let settings_data: GpassSettings =
-                program.account(settings).expect("Get settings error");
-            println!("Settings data: {:?}", settings_data);
+        (commands::gpass::CMD_SHOW_INFO, Some(arg_matches)) => {
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
+            let gpass_info_data: GpassInfo =
+                program.account(gpass_info).expect("Get gpass_info error");
+            println!("GPASS Info data: {:?}", gpass_info_data);
             Ok(())
         }
 
         (commands::gpass::CMD_SHOW_WALLET, Some(arg_matches)) => {
-            let settings = value_t_or_exit!(arg_matches, "settings", Pubkey);
+            let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let user = value_t_or_exit!(arg_matches, "user", Pubkey);
             let (wallet, _bump) = Pubkey::find_program_address(
                 &[
                     gpass::state::USER_WALLET_SEED.as_bytes(),
-                    settings.as_ref(),
+                    gpass_info.as_ref(),
                     user.as_ref(),
                 ],
                 &program.id(),
@@ -157,14 +157,14 @@ fn cmd_initialize(
     minters: Vec<Pubkey>,
     burners: Vec<Pubkey>,
 ) -> Result<(), ClientError> {
-    let settings = Keypair::new();
-    println!("New GPASS Pubkey: {}", settings.pubkey());
+    let gpass_info = Keypair::new();
+    println!("New GPASS Pubkey: {}", gpass_info.pubkey());
 
     program
         .request()
         .accounts(gpass::accounts::Initialize {
             admin: program.payer(),
-            settings: settings.pubkey(),
+            gpass_info: gpass_info.pubkey(),
             system_program: system_program::ID,
         })
         .args(gpass::instruction::Initialize {
@@ -173,18 +173,18 @@ fn cmd_initialize(
             minters: minters,
             burners: burners,
         })
-        .signer(&settings)
+        .signer(&gpass_info)
         .send()?;
 
     Ok(())
 }
 
-fn cmd_update_admin(program: &Program, settings: Pubkey, admin: Pubkey) -> Result<(), ClientError> {
+fn cmd_update_admin(program: &Program, gpass_info: Pubkey, admin: Pubkey) -> Result<(), ClientError> {
     program
         .request()
         .accounts(gpass::accounts::UpdateParam {
             authority: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
         })
         .args(gpass::instruction::UpdateAdmin { admin: admin })
         .send()?;
@@ -194,14 +194,14 @@ fn cmd_update_admin(program: &Program, settings: Pubkey, admin: Pubkey) -> Resul
 
 fn cmd_set_update_authority(
     program: &Program,
-    settings: Pubkey,
+    gpass_info: Pubkey,
     update_auth: Pubkey,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(gpass::accounts::UpdateParam {
             authority: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
         })
         .args(gpass::instruction::SetUpdateAuthority {
             update_auth: update_auth,
@@ -213,14 +213,14 @@ fn cmd_set_update_authority(
 
 fn cmd_update_burn_period(
     program: &Program,
-    settings: Pubkey,
+    gpass_info: Pubkey,
     burn_period: u64,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(gpass::accounts::UpdateParam {
             authority: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
         })
         .args(gpass::instruction::UpdateBurnPeriod {
             burn_period: burn_period,
@@ -232,14 +232,14 @@ fn cmd_update_burn_period(
 
 fn cmd_update_minters(
     program: &Program,
-    settings: Pubkey,
+    gpass_info: Pubkey,
     minters: Vec<Pubkey>,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(gpass::accounts::UpdateParam {
             authority: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
         })
         .args(gpass::instruction::UpdateMinters { minters: minters })
         .send()?;
@@ -249,14 +249,14 @@ fn cmd_update_minters(
 
 fn cmd_update_burners(
     program: &Program,
-    settings: Pubkey,
+    gpass_info: Pubkey,
     burners: Vec<Pubkey>,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(gpass::accounts::UpdateParam {
             authority: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
         })
         .args(gpass::instruction::UpdateBurners { burners: burners })
         .send()?;
@@ -264,11 +264,11 @@ fn cmd_update_burners(
     Ok(())
 }
 
-fn cmd_create_wallet(program: &Program, settings: Pubkey, user: Pubkey) -> Result<(), ClientError> {
+fn cmd_create_wallet(program: &Program, gpass_info: Pubkey, user: Pubkey) -> Result<(), ClientError> {
     let (wallet, _bump) = Pubkey::find_program_address(
         &[
             gpass::state::USER_WALLET_SEED.as_bytes(),
-            settings.as_ref(),
+            gpass_info.as_ref(),
             user.as_ref(),
         ],
         &program.id(),
@@ -280,7 +280,7 @@ fn cmd_create_wallet(program: &Program, settings: Pubkey, user: Pubkey) -> Resul
         .request()
         .accounts(gpass::accounts::CreateWallet {
             payer: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
             user: user,
             wallet: wallet,
             system_program: system_program::ID,
@@ -293,7 +293,7 @@ fn cmd_create_wallet(program: &Program, settings: Pubkey, user: Pubkey) -> Resul
 
 fn cmd_mint_to(
     program: &Program,
-    settings: Pubkey,
+    gpass_info: Pubkey,
     to: Pubkey,
     amount: u64,
 ) -> Result<(), ClientError> {
@@ -301,7 +301,7 @@ fn cmd_mint_to(
         .request()
         .accounts(gpass::accounts::MintTo {
             authority: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
             to: to,
         })
         .args(gpass::instruction::MintTo { amount: amount })
@@ -312,7 +312,7 @@ fn cmd_mint_to(
 
 fn cmd_burn(
     program: &Program,
-    settings: Pubkey,
+    gpass_info: Pubkey,
     from: Pubkey,
     amount: u64,
 ) -> Result<(), ClientError> {
@@ -320,7 +320,7 @@ fn cmd_burn(
         .request()
         .accounts(gpass::accounts::Burn {
             authority: program.payer(),
-            settings: settings,
+            gpass_info: gpass_info,
             from: from,
         })
         .args(gpass::instruction::MintTo { amount: amount })
@@ -331,13 +331,13 @@ fn cmd_burn(
 
 fn cmd_try_burn_in_period(
     program: &Program,
-    settings: Pubkey,
+    gpass_info: Pubkey,
     wallet: Pubkey,
 ) -> Result<(), ClientError> {
     program
         .request()
         .accounts(gpass::accounts::BurnInPeriod {
-            settings: settings,
+            gpass_info: gpass_info,
             wallet: wallet,
         })
         .args(gpass::instruction::TryBurnInPeriod {})

@@ -13,7 +13,7 @@ pub const CMD_UPDATE_UNFREEZE_LOCK_PERIOD: &str = "update-unfreeze-lock-period";
 pub const CMD_FREEZE: &str = "freeze";
 pub const CMD_WITHDRAW_GPASS: &str = "withdraw-gpass";
 pub const CMD_UNFREEZE: &str = "unfreeze";
-pub const CMD_SHOW_PARAMS: &str = "show-params";
+pub const CMD_SHOW_INFO: &str = "show-info";
 pub const CMD_SHOW_USER_INFO: &str = "show-user-info";
 
 pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
@@ -29,7 +29,7 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The params update authority pubkey."),
+                        .help("The freezing info update authority pubkey."),
                 )
                 .arg(
                     Arg::with_name("ggwp_token")
@@ -40,12 +40,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
                         .help("The GGWP Token (mint) pubkey."),
                 )
                 .arg(
-                    Arg::with_name("gpass_settings")
+                    Arg::with_name("gpass_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The GPASS settings account pubkey."),
+                        .help("The GPASS info account pubkey."),
                 )
                 .arg(
                     Arg::with_name("accumulative_fund")
@@ -106,12 +106,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_ADMIN)
                 .about("Admin can set the new admin of freezing.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("admin")
@@ -126,12 +126,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_SET_UPDATE_AUTHORITY)
                 .about("Admin can set the new update authority of freezing.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("update_authority")
@@ -146,12 +146,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_ROYALTY)
                 .about("Update authority can set the new royalty value in percent.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("royalty")
@@ -165,12 +165,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_UNFREEZE_ROYALTY)
                 .about("Update authority can set the new unfreeze royalty value in percent.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("unfreeze_royalty")
@@ -184,12 +184,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_UNFREEZE_LOCK_PERIOD)
                 .about("Update authority can set the new unfreeze lock period value in seconds.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("unfreeze_lock_period")
@@ -203,12 +203,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_REWARD_TABLE)
                 .about("Update authority can set the new reward table.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("reward_table_ggwp")
@@ -233,12 +233,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_UPDATE_REWARD_PERIOD)
                 .about("Update authority can set the new reward period value in seconds.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("reward_period")
@@ -252,12 +252,12 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_FREEZE)
                 .about("User can freeze the amount of GGWP for getting rewards in GPASS.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("amount")
@@ -271,48 +271,48 @@ pub fn get_freezing_commands<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name(CMD_WITHDRAW_GPASS)
                 .about("User can withdraw earned GPASS in every time.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 ),
         )
         .subcommand(
             SubCommand::with_name(CMD_UNFREEZE)
                 .about("User can unfreeze full amount of freezed GGWP.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 ),
         )
         .subcommand(
-            SubCommand::with_name(CMD_SHOW_PARAMS)
-                .about("Show freezing params.")
+            SubCommand::with_name(CMD_SHOW_INFO)
+                .about("Show freezing info.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 ),
         )
         .subcommand(
             SubCommand::with_name(CMD_SHOW_USER_INFO)
                 .about("Show the user info account.")
                 .arg(
-                    Arg::with_name("params")
+                    Arg::with_name("freezing_info")
                         .value_name("PUBKEY")
                         .validator(is_valid_pubkey)
                         .required(true)
                         .takes_value(true)
-                        .help("The freezing params account address."),
+                        .help("The freezing info account address."),
                 )
                 .arg(
                     Arg::with_name("user")

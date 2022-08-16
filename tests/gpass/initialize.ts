@@ -26,7 +26,7 @@ describe("GPASS initialize tests", () => {
   });
 
   it("Initialize", async () => {
-    const settings = Keypair.generate();
+    const gpassInfo = Keypair.generate();
     await program.methods.initialize(
       new anchor.BN(burnPeriod),
       updateAuth.publicKey,
@@ -35,23 +35,23 @@ describe("GPASS initialize tests", () => {
     )
       .accounts({
         admin: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([admin, settings])
+      .signers([admin, gpassInfo])
       .rpc();
 
-    const settingsData = await program.account.gpassSettings.fetch(settings.publicKey);
-    assert.ok(settingsData.admin.equals(admin.publicKey));
-    assert.ok(settingsData.updateAuth.equals(updateAuth.publicKey));
-    assert.equal(settingsData.burnPeriod.toNumber(), burnPeriod);
-    assert.equal(settingsData.totalAmount.toNumber(), 0);
-    assert.deepStrictEqual(settingsData.minters, mintersPK);
-    assert.deepStrictEqual(settingsData.burners, burnersPK);
+    const gpassInfoData = await program.account.gpassInfo.fetch(gpassInfo.publicKey);
+    assert.ok(gpassInfoData.admin.equals(admin.publicKey));
+    assert.ok(gpassInfoData.updateAuth.equals(updateAuth.publicKey));
+    assert.equal(gpassInfoData.burnPeriod.toNumber(), burnPeriod);
+    assert.equal(gpassInfoData.totalAmount.toNumber(), 0);
+    assert.deepStrictEqual(gpassInfoData.minters, mintersPK);
+    assert.deepStrictEqual(gpassInfoData.burners, burnersPK);
   });
 
   it("Initialize with invalid minters list", async () => {
-    const settings = Keypair.generate();
+    const gpassInfo = Keypair.generate();
     // Invalid minters list len
     const invalidMintersPK = [
       new PublicKey("27WSu69fpy9NsJEKMLBVz5m6YG2hph5WiU56tvbizngN"),
@@ -65,10 +65,10 @@ describe("GPASS initialize tests", () => {
     )
       .accounts({
         admin: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([admin, settings])
+      .signers([admin, gpassInfo])
       .rpc(),
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
@@ -81,7 +81,7 @@ describe("GPASS initialize tests", () => {
   });
 
   it("Initialize with invalid burners list", async () => {
-    const settings = Keypair.generate();
+    const gpassInfo = Keypair.generate();
     // Invalid burners list len
     const invalidBurnersPK = [
       new PublicKey("27WSu69fpy9NsJEKMLBVz5m6YG2hph5WiU56tvbizngN"),
@@ -99,10 +99,10 @@ describe("GPASS initialize tests", () => {
     )
       .accounts({
         admin: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([admin, settings])
+      .signers([admin, gpassInfo])
       .rpc(),
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);
@@ -115,7 +115,7 @@ describe("GPASS initialize tests", () => {
   });
 
   it("Initialize with invalid burn period", async () => {
-    const settings = Keypair.generate();
+    const gpassInfo = Keypair.generate();
     const invalidBurnPeriod = 0;
     await assert.rejects(program.methods.initialize(
       new anchor.BN(invalidBurnPeriod),
@@ -125,10 +125,10 @@ describe("GPASS initialize tests", () => {
     )
       .accounts({
         admin: admin.publicKey,
-        settings: settings.publicKey,
+        gpassInfo: gpassInfo.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([admin, settings])
+      .signers([admin, gpassInfo])
       .rpc(),
       (e: AnchorError) => {
         assert.ok(e.error !== undefined);

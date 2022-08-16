@@ -39,9 +39,9 @@ describe("Freezing authority tests", () => {
     )
       .accounts({
         admin: fixture.admin.publicKey,
-        freezingParams: fixture.freezing.params.publicKey,
+        freezingInfo: fixture.freezing.info.publicKey,
         accumulativeFund: fixture.freezing.accumulativeFund,
-        gpassSettings: fixture.freezing.gpassSettings.publicKey,
+        gpassInfo: fixture.freezing.gpassInfo.publicKey,
         gpassMintAuth: fixture.freezing.gpassMintAuth,
         treasury: fixture.freezing.treasury,
         treasuryAuth: fixture.freezing.treasuryAuth,
@@ -49,21 +49,21 @@ describe("Freezing authority tests", () => {
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([fixture.admin, fixture.freezing.params])
+      .signers([fixture.admin, fixture.freezing.info])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.ok(paramsData.admin.equals(fixture.admin.publicKey));
-    assert.ok(paramsData.updateAuth.equals(fixture.updateAuth.publicKey));
-    assert.ok(paramsData.ggwpToken.equals(fixture.freezing.ggwpToken));
-    assert.ok(paramsData.gpassSettings.equals(fixture.freezing.gpassSettings.publicKey));
-    assert.ok(paramsData.accumulativeFund.equals(fixture.freezing.accumulativeFund));
-    assert.ok(paramsData.treasury.equals(fixture.freezing.treasury));
-    assert.equal(paramsData.totalFreezed.toNumber(), 0);
-    assert.equal(paramsData.rewardPeriod.toNumber(), rewardPeriod);
-    assert.equal(paramsData.royalty, royalty);
-    assert.equal(paramsData.unfreezeRoyalty, unfreezeRoyalty);
-    assert.equal(paramsData.unfreezeLockPeriod.toNumber(), unfreezeLockPeriod);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.ok(freezingInfoData.admin.equals(fixture.admin.publicKey));
+    assert.ok(freezingInfoData.updateAuth.equals(fixture.updateAuth.publicKey));
+    assert.ok(freezingInfoData.ggwpToken.equals(fixture.freezing.ggwpToken));
+    assert.ok(freezingInfoData.gpassInfo.equals(fixture.freezing.gpassInfo.publicKey));
+    assert.ok(freezingInfoData.accumulativeFund.equals(fixture.freezing.accumulativeFund));
+    assert.ok(freezingInfoData.treasury.equals(fixture.freezing.treasury));
+    assert.equal(freezingInfoData.totalFreezed.toNumber(), 0);
+    assert.equal(freezingInfoData.rewardPeriod.toNumber(), rewardPeriod);
+    assert.equal(freezingInfoData.royalty, royalty);
+    assert.equal(freezingInfoData.unfreezeRoyalty, unfreezeRoyalty);
+    assert.equal(freezingInfoData.unfreezeLockPeriod.toNumber(), unfreezeLockPeriod);
   });
 
   const newAdmin = Keypair.generate();
@@ -74,8 +74,8 @@ describe("Freezing authority tests", () => {
       .updateAdmin(newAdmin.publicKey)
       .accounts({
         authority: invalidAuthority.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([invalidAuthority])
       .rpc(),
@@ -93,14 +93,14 @@ describe("Freezing authority tests", () => {
       .updateAdmin(newAdmin.publicKey)
       .accounts({
         authority: fixture.admin.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.admin])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.ok(paramsData.admin.equals(newAdmin.publicKey));
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.ok(freezingInfoData.admin.equals(newAdmin.publicKey));
   });
 
   const newUpdateAuth = Keypair.generate();
@@ -109,8 +109,8 @@ describe("Freezing authority tests", () => {
       .setUpdateAuthority(newUpdateAuth.publicKey)
       .accounts({
         authority: fixture.admin.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.admin])
       .rpc(),
@@ -128,14 +128,14 @@ describe("Freezing authority tests", () => {
       .setUpdateAuthority(newUpdateAuth.publicKey)
       .accounts({
         authority: newAdmin.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newAdmin])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.ok(paramsData.updateAuth.equals(newUpdateAuth.publicKey));
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.ok(freezingInfoData.updateAuth.equals(newUpdateAuth.publicKey));
   });
 
   it("Update royalty with invalid update auth", async () => {
@@ -143,8 +143,8 @@ describe("Freezing authority tests", () => {
       .updateRoyalty(100)
       .accounts({
         authority: fixture.updateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.updateAuth])
       .rpc(),
@@ -163,8 +163,8 @@ describe("Freezing authority tests", () => {
       .updateRoyalty(invalidRoyalty)
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc(),
@@ -183,14 +183,14 @@ describe("Freezing authority tests", () => {
       .updateRoyalty(newRoyalty)
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.equal(paramsData.royalty, newRoyalty);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.equal(freezingInfoData.royalty, newRoyalty);
   });
 
   it("Update unfreeze royalty with invalid update auth", async () => {
@@ -198,8 +198,8 @@ describe("Freezing authority tests", () => {
       .updateUnfreezeRoyalty(100)
       .accounts({
         authority: fixture.updateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.updateAuth])
       .rpc(),
@@ -218,8 +218,8 @@ describe("Freezing authority tests", () => {
       .updateUnfreezeRoyalty(invalidRoyalty)
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc(),
@@ -238,14 +238,14 @@ describe("Freezing authority tests", () => {
       .updateUnfreezeRoyalty(newRoyalty)
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.equal(paramsData.unfreezeRoyalty, newRoyalty);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.equal(freezingInfoData.unfreezeRoyalty, newRoyalty);
   });
 
   it("Update reward period with invalid authority", async () => {
@@ -253,8 +253,8 @@ describe("Freezing authority tests", () => {
       .updateRewardPeriod(new anchor.BN(100))
       .accounts({
         authority: fixture.updateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.updateAuth])
       .rpc(),
@@ -273,8 +273,8 @@ describe("Freezing authority tests", () => {
       .updateRewardPeriod(new anchor.BN(rewardPeriod))
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc(),
@@ -293,14 +293,14 @@ describe("Freezing authority tests", () => {
       .updateRewardPeriod(new anchor.BN(newRewardPeriod))
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.equal(paramsData.rewardPeriod.toNumber(), newRewardPeriod);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.equal(freezingInfoData.rewardPeriod.toNumber(), newRewardPeriod);
   });
 
   it("Update reward table with invalid authority", async () => {
@@ -313,8 +313,8 @@ describe("Freezing authority tests", () => {
       ])
       .accounts({
         authority: fixture.updateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.updateAuth])
       .rpc(),
@@ -332,8 +332,8 @@ describe("Freezing authority tests", () => {
       .updateRewardTable([])
       .accounts({
         authority: fixture.updateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.updateAuth])
       .rpc(),
@@ -376,8 +376,8 @@ describe("Freezing authority tests", () => {
       ])
       .accounts({
         authority: fixture.updateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.updateAuth])
       .rpc(),
@@ -404,8 +404,8 @@ describe("Freezing authority tests", () => {
       ])
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc(),
@@ -444,17 +444,17 @@ describe("Freezing authority tests", () => {
       ])
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.equal(paramsData.rewardTable[0].ggwpAmount.toNumber(), 1000_000_000_000);
-    assert.equal(paramsData.rewardTable[0].gpassAmount.toNumber(), 5);
-    assert.equal(paramsData.rewardTable[1].ggwpAmount.toNumber(), 2000_000_000_000);
-    assert.equal(paramsData.rewardTable[1].gpassAmount.toNumber(), 10);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.equal(freezingInfoData.rewardTable[0].ggwpAmount.toNumber(), 1000_000_000_000);
+    assert.equal(freezingInfoData.rewardTable[0].gpassAmount.toNumber(), 5);
+    assert.equal(freezingInfoData.rewardTable[1].ggwpAmount.toNumber(), 2000_000_000_000);
+    assert.equal(freezingInfoData.rewardTable[1].gpassAmount.toNumber(), 10);
   });
 
   it("Update unfreeze lock period with invalid authority", async () => {
@@ -462,8 +462,8 @@ describe("Freezing authority tests", () => {
       .updateUnfreezeLockPeriod(new anchor.BN(100))
       .accounts({
         authority: fixture.updateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([fixture.updateAuth])
       .rpc(),
@@ -482,8 +482,8 @@ describe("Freezing authority tests", () => {
       .updateUnfreezeLockPeriod(new anchor.BN(unfreezeLockPeriod))
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc(),
@@ -502,13 +502,13 @@ describe("Freezing authority tests", () => {
       .updateUnfreezeLockPeriod(new anchor.BN(newPeriod))
       .accounts({
         authority: newUpdateAuth.publicKey,
-        freezingParams:
-          fixture.freezing.params.publicKey
+        freezingInfo:
+          fixture.freezing.info.publicKey
       })
       .signers([newUpdateAuth])
       .rpc();
 
-    const paramsData = await freezingProgram.account.freezingParams.fetch(fixture.freezing.params.publicKey);
-    assert.equal(paramsData.unfreezeLockPeriod.toNumber(), newPeriod);
+    const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
+    assert.equal(freezingInfoData.unfreezeLockPeriod.toNumber(), newPeriod);
   });
 });
