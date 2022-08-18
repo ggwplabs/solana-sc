@@ -451,6 +451,4 @@ pub mod freezing {
 
         Ok(())
     }
-
-    // TODO: viewers
 }

@@ -725,6 +725,7 @@ dependencies = [
  "solana-clap-utils",
  "spl-associated-token-account",
  "spl-token",
+ "staking",
 ]
 
 [[package]]

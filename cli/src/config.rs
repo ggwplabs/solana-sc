@@ -14,6 +14,7 @@ pub struct CLIConfig {
 pub struct Programs {
     pub gpass: String,
     pub freezing: String,
+    pub staking: String,
 }
 
 impl Default for CLIConfig {
@@ -27,6 +28,7 @@ impl Default for CLIConfig {
         let programs = Programs {
             gpass: gpass::id().to_string(),
             freezing: freezing::id().to_string(),
+            staking: staking::id().to_string(),
         };
 
         Self {

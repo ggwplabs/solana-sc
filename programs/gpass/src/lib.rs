@@ -242,6 +242,4 @@ pub mod gpass {
 
         Ok(())
     }
-
-    // TODO: viewers
 }
