@@ -18,6 +18,7 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 # Exact functional test
-start-validator = "rm -r .anchor/test-ledger && solana-test-validator -l .anchor/test-ledger --bpf-program target/deploy/gpass-keypair.json target/deploy/gpass.so --bpf-program target/deploy/freezing-keypair.json target/deploy/freezing.so"
+start-validator = "rm -r .anchor/test-ledger && solana-test-validator -l .anchor/test-ledger --bpf-program target/deploy/gpass-keypair.json target/deploy/gpass.so --bpf-program target/deploy/freezing-keypair.json target/deploy/freezing.so --bpf-program target/deploy/staking-keypair.json target/deploy/staking.so"
 test-gpass = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/gpass/*.ts"
 test-freezing = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/freezing/*.ts"
+test-staking = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/staking/*.ts"

@@ -16,16 +16,16 @@ export class FreezingTestFixture {
   freezing: {
     info: Keypair;
     gpassInfo: Keypair;
-    gpassMintAuth: PublicKey,
-    ggwpToken: PublicKey,
+    gpassMintAuth: PublicKey;
+    ggwpToken: PublicKey;
     accumulativeFund: PublicKey;
     treasury: PublicKey;
-    treasuryAuth: PublicKey,
+    treasuryAuth: PublicKey;
   }
 
   user: {
     kp: Keypair;
-    info: PublicKey,
+    info: PublicKey;
     gpassWallet: PublicKey;
     ggwpWallet: PublicKey;
   }

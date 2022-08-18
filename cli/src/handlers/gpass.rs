@@ -179,7 +179,11 @@ fn cmd_initialize(
     Ok(())
 }
 
-fn cmd_update_admin(program: &Program, gpass_info: Pubkey, admin: Pubkey) -> Result<(), ClientError> {
+fn cmd_update_admin(
+    program: &Program,
+    gpass_info: Pubkey,
+    admin: Pubkey,
+) -> Result<(), ClientError> {
     program
         .request()
         .accounts(gpass::accounts::UpdateParam {
@@ -264,7 +268,11 @@ fn cmd_update_burners(
     Ok(())
 }
 
-fn cmd_create_wallet(program: &Program, gpass_info: Pubkey, user: Pubkey) -> Result<(), ClientError> {
+fn cmd_create_wallet(
+    program: &Program,
+    gpass_info: Pubkey,
+    user: Pubkey,
+) -> Result<(), ClientError> {
     let (wallet, _bump) = Pubkey::find_program_address(
         &[
             gpass::state::USER_WALLET_SEED.as_bytes(),
