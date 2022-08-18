@@ -7,11 +7,10 @@ use anchor_client::solana_sdk::signature::Keypair;
 use anchor_client::solana_sdk::signer::Signer;
 use anchor_client::ClientError;
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client, Program};
-use clap::{value_t_or_exit, values_t_or_exit};
+use clap::value_t_or_exit;
 use clap::{ArgMatches, Error};
-use freezing::state::{
-    FreezingInfo, RewardTableRow, UserInfo, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED,
-};
+use freezing::state::{FreezingInfo, RewardTableRow, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED};
+use gpass::state::GpassInfo;
 use spl_token::state::Mint;
 
 pub fn handle(
@@ -108,13 +107,87 @@ pub fn cmd_init_all(
     println!("Freezing treasury auth: {}", freezing_treasury_auth);
 
     // Init of get all token wallets (and funds)
+    let freezing_treasury =
+        get_or_create_token_account(&gpass_program, ggwp_token, freezing_treasury_auth)?;
+    let accumulative_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
+
+    println!("Accumulative fund: {}", accumulative_fund);
+
     // Init GPASS with lists of minters and burners
+    gpass_program
+        .request()
+        .accounts(gpass::accounts::Initialize {
+            admin: admin_pk,
+            gpass_info: gpass_info.pubkey(),
+            system_program: system_program::ID,
+        })
+        .args(gpass::instruction::Initialize {
+            burn_period: 30 * 24 * 60 * 60, // 30 days
+            update_auth: update_auth,
+            minters: vec![freezing_gpass_mint_auth],
+            burners: vec![],
+        })
+        .signer(&gpass_info)
+        .send()?;
+    let gpass_info_data: GpassInfo = gpass_program.account(gpass_info.pubkey())?;
+    println!("GPASS Initalized: {:?}", gpass_info_data);
+
     // Init Freezing with gpass settings
+    let reward_table = vec![
+        RewardTableRow {
+            ggwp_amount: 1000_000_000_000,
+            gpass_amount: 5,
+        },
+        RewardTableRow {
+            ggwp_amount: 2000_000_000_000,
+            gpass_amount: 10,
+        },
+        RewardTableRow {
+            ggwp_amount: 3000_000_000_000,
+            gpass_amount: 15,
+        },
+        RewardTableRow {
+            ggwp_amount: 4000_000_000_000,
+            gpass_amount: 20,
+        },
+        RewardTableRow {
+            ggwp_amount: 4800_000_000_000,
+            gpass_amount: 25,
+        },
+    ];
+
+    freezing_program
+        .request()
+        .accounts(freezing::accounts::Initialize {
+            admin: admin_pk,
+            freezing_info: freezing_info.pubkey(),
+            gpass_mint_auth: freezing_gpass_mint_auth,
+            treasury_auth: freezing_treasury_auth,
+            ggwp_token: ggwp_token,
+            gpass_info: gpass_info.pubkey(),
+            accumulative_fund: accumulative_fund,
+            treasury: freezing_treasury,
+            system_program: system_program::ID,
+            token_program: spl_token::id(),
+        })
+        .args(freezing::instruction::Initialize {
+            update_auth: update_auth,
+            reward_period: 24 * 60 * 60,
+            royalty: 8,
+            unfreeze_royalty: 15,
+            unfreeze_lock_period: 15 * 24 * 60 * 60, // 15 days
+            reward_table: reward_table,
+        })
+        .signer(&freezing_info)
+        .send()?;
+    let freezing_info_data: FreezingInfo = freezing_program.account(freezing_info.pubkey())?;
+    println!("Freezing info initialized: {:?}", freezing_info_data);
+
     // Init Staking
 
     // Calc balance diff
     let admin_balance_after = gpass_program.rpc().get_balance(&admin_pk)?;
-    println!("Spent SOL: {}", admin_balance_after - admin_balance_before);
+    println!("Spent SOL: {}", admin_balance_before - admin_balance_after);
 
     Ok(())
 }
