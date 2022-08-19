@@ -53,3 +53,10 @@ pub struct Initialize<'info> {
     // Misc.
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+pub struct UpdateParam<'info> {
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub staking_info: Account<'info, StakingInfo>,
+}

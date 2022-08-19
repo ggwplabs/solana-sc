@@ -11,6 +11,7 @@ use clap::value_t_or_exit;
 use clap::{ArgMatches, Error};
 use freezing::state::{FreezingInfo, RewardTableRow, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED};
 use gpass::state::GpassInfo;
+use spl_token::amount_to_ui_amount;
 use spl_token::state::Mint;
 
 pub fn handle(
@@ -187,7 +188,10 @@ pub fn cmd_init_all(
 
     // Calc balance diff
     let admin_balance_after = gpass_program.rpc().get_balance(&admin_pk)?;
-    println!("Spent SOL: {}", admin_balance_before - admin_balance_after);
+    println!(
+        "Spent SOL: {}",
+        amount_to_ui_amount(admin_balance_before - admin_balance_after, 0)
+    );
 
     Ok(())
 }

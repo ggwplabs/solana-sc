@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { AnchorError, Program } from "@project-serum/anchor";
-import { Keypair, SystemProgram } from "@solana/web3.js";
+import { SystemProgram } from "@solana/web3.js";
 import { Staking } from "../../target/types/staking";
 import * as assert from "assert";
 import { StakingTestFixture, prepareStakingTestFixture } from "./fixture";
