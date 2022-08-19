@@ -38,5 +38,5 @@ pub enum StakingError {
     #[msg("Invalid staking fund owner PK")]
     InvalidStakingFundOwner, // 6014
 
-    // Functional errors
+                             // Functional errors
 }

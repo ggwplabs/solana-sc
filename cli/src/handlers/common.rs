@@ -9,10 +9,11 @@ use anchor_client::ClientError;
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client, Program};
 use clap::value_t_or_exit;
 use clap::{ArgMatches, Error};
-use freezing::state::{FreezingInfo, RewardTableRow, GPASS_MINT_AUTH_SEED, TREASURY_AUTH_SEED};
+use freezing::state::{FreezingInfo, RewardTableRow, GPASS_MINT_AUTH_SEED};
 use gpass::state::GpassInfo;
 use spl_token::amount_to_ui_amount;
 use spl_token::state::Mint;
+use staking::state::{StakingInfo, STAKING_FUND_AUTH_SEED};
 
 pub fn handle(
     cmd_matches: &ArgMatches,
@@ -100,19 +101,47 @@ pub fn cmd_init_all(
 
     let (freezing_treasury_auth, _) = Pubkey::find_program_address(
         &[
-            TREASURY_AUTH_SEED.as_bytes(),
+            freezing::state::TREASURY_AUTH_SEED.as_bytes(),
             freezing_info.pubkey().as_ref(),
         ],
         &freezing_program.id(),
     );
     println!("Freezing treasury auth: {}", freezing_treasury_auth);
 
+    let (staking_fund_auth, _) = Pubkey::find_program_address(
+        &[
+            STAKING_FUND_AUTH_SEED.as_bytes(),
+            staking_info.pubkey().as_ref(),
+        ],
+        &staking_program.id(),
+    );
+    println!("Staking fund wallet auth: {}", staking_fund_auth);
+
+    let (staking_treasury_auth, _) = Pubkey::find_program_address(
+        &[
+            staking::state::TREASURY_AUTH_SEED.as_bytes(),
+            staking_info.pubkey().as_ref(),
+        ],
+        &staking_program.id(),
+    );
+    println!("Staking treasury auth: {}", staking_treasury_auth);
+
     // Init of get all token wallets (and funds)
     let freezing_treasury =
         get_or_create_token_account(&gpass_program, ggwp_token, freezing_treasury_auth)?;
+    let staking_treasury =
+        get_or_create_token_account(&gpass_program, ggwp_token, staking_treasury_auth)?;
     let accumulative_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
+    let staking_fund = get_or_create_token_account(&gpass_program, ggwp_token, staking_fund_auth)?;
 
-    println!("Accumulative fund: {}", accumulative_fund);
+    println!(
+        "Accumulative fund (owner: {}): {}",
+        admin_pk, accumulative_fund
+    );
+    println!(
+        "Staking fund (owner: {}): {}",
+        staking_fund_auth, staking_fund
+    );
 
     // Init GPASS with lists of minters and burners
     gpass_program
@@ -185,12 +214,40 @@ pub fn cmd_init_all(
     println!("Freezing info initialized: {:?}", freezing_info_data);
 
     // Init Staking
+    staking_program
+        .request()
+        .accounts(staking::accounts::Initialize {
+            admin: admin_pk,
+            staking_info: staking_info.pubkey(),
+            ggwp_token: ggwp_token,
+            accumulative_fund: accumulative_fund,
+            treasury: staking_treasury,
+            treasury_auth: staking_treasury_auth,
+            staking_fund: staking_fund,
+            staking_fund_auth: staking_fund_auth,
+            system_program: system_program::ID,
+        })
+        .args(staking::instruction::Initialize {
+            update_auth: update_auth,
+            epoch_period_days: 45,
+            min_stake_amount: 3000_000_000_000,
+            hold_period_days: 30,
+            hold_royalty: 15,
+            royalty: 8,
+            apr_start: 45,
+            apr_step: 1,
+            apr_end: 5,
+        })
+        .signer(&staking_info)
+        .send()?;
+    let staking_info_data: StakingInfo = staking_program.account(staking_info.pubkey())?;
+    println!("Staking info initialized: {:?}", staking_info_data);
 
     // Calc balance diff
     let admin_balance_after = gpass_program.rpc().get_balance(&admin_pk)?;
     println!(
         "Spent SOL: {}",
-        amount_to_ui_amount(admin_balance_before - admin_balance_after, 0)
+        amount_to_ui_amount(admin_balance_before - admin_balance_after, 9)
     );
 
     Ok(())
