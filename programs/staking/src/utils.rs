@@ -1,6 +1,4 @@
-use crate::{
-    error::StakingError,
-};
+use crate::error::StakingError;
 use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
 use anchor_spl::token::spl_token::{amount_to_ui_amount, ui_amount_to_amount};
 
@@ -11,16 +9,20 @@ pub fn calc_royalty_amount(royalty: u8, amount: u64) -> Result<u64> {
     Ok(ui_amount_to_amount(royalty_amount, 9))
 }
 
-/// Checks freezed time for withdraw royalty.
+/// Checks stake time for withdraw royalty.
 pub fn is_withdraw_royalty(
     current_time: UnixTimestamp,
-    freezed_time: UnixTimestamp,
-    unfreeze_lock_period: UnixTimestamp,
+    stake_time: UnixTimestamp,
+    hold_period_days: u16,
 ) -> Result<bool> {
     let spent_time = current_time
-        .checked_sub(freezed_time)
+        .checked_sub(stake_time)
         .ok_or(StakingError::Overflow)?;
-    if spent_time >= unfreeze_lock_period {
+    let spent_days = spent_time
+        .checked_div(24 * 60 * 60)
+        .ok_or(StakingError::Overflow)?;
+    println!("Spent days: {}", spent_days);
+    if spent_days >= hold_period_days as i64 {
         return Ok(false);
     }
     Ok(true)
@@ -42,10 +44,23 @@ mod tests {
 
     #[test]
     pub fn test_is_withdraw_royalty() {
-        assert_eq!(is_withdraw_royalty(1660032700, 1660032700, 100), Ok(true));
-        assert_eq!(is_withdraw_royalty(1660032700, 1660032650, 100), Ok(true));
-        assert_eq!(is_withdraw_royalty(1660032700, 1660032800, 100), Ok(true));
-        assert_eq!(is_withdraw_royalty(1660032700, 1660032500, 100), Ok(false));
-        assert_eq!(is_withdraw_royalty(1660032700, 1660032300, 100), Ok(false));
+        assert_eq!(is_withdraw_royalty(1660032700, 1660032700, 2), Ok(true));
+        assert_eq!(is_withdraw_royalty(1660032700, 1660032700 + 40000, 2), Ok(true));
+        assert_eq!(
+            is_withdraw_royalty(1660032700, 1660032700 - 1 * 24 * 60 * 60, 2),
+            Ok(true)
+        );
+        assert_eq!(
+            is_withdraw_royalty(1660032700, 1660032700 - 1 * 24 * 60 * 60 + 100, 2),
+            Ok(true)
+        );
+        assert_eq!(
+            is_withdraw_royalty(1660032700, 1660032700 - 2 * 24 * 60 * 60, 2),
+            Ok(false)
+        );
+        assert_eq!(
+            is_withdraw_royalty(1660032700, 1660032700 - 31 * 24 * 60 * 60, 30),
+            Ok(false)
+        );
     }
 }

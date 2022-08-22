@@ -47,4 +47,6 @@ pub enum StakingError {
     MinStakeAmountExceeded, // 6017
     #[msg("Additional stake not allowed")]
     AdditionalStakeNotAllowed, // 6018
+    #[msg("Nothing to withdraw")]
+    NothingToWithdraw, // 6019
 }

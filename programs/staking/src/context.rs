@@ -104,3 +104,55 @@ pub struct Stake<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 }
+
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(mut)]
+    pub staking_info: Box<Account<'info, StakingInfo>>,
+
+    #[account(init_if_needed, payer = user, space = UserInfo::LEN,
+        seeds = [
+            USER_INFO_SEED.as_bytes(),
+            staking_info.key().as_ref(),
+            user.key().as_ref(),
+        ],
+        bump
+    )]
+    pub user_info: Box<Account<'info, UserInfo>>,
+
+    #[account(mut,
+        constraint = user_ggwp_wallet.mint == staking_info.ggwp_token
+        @StakingError::InvalidUserGGWPWalletMint,
+        constraint = user_ggwp_wallet.owner == user.key()
+        @StakingError::InvalidUserGGWPWalletOwner,
+    )]
+    pub user_ggwp_wallet: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: Treasury auth PDA
+    #[account(
+        seeds = [
+            TREASURY_AUTH_SEED.as_bytes(),
+            staking_info.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub treasury_auth: UncheckedAccount<'info>,
+
+    #[account(mut,
+        constraint = treasury.key() == staking_info.treasury
+        @StakingError::InvalidTreasuryPK,
+    )]
+    pub treasury: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut,
+        constraint = accumulative_fund.key() == staking_info.accumulative_fund
+        @StakingError::InvalidAccumulativeFundPK,
+    )]
+    pub accumulative_fund: Box<Account<'info, TokenAccount>>,
+
+    // Misc.
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
