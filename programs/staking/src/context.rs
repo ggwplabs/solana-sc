@@ -1,14 +1,16 @@
 use crate::error::StakingError;
-use crate::state::{StakingInfo, STAKING_FUND_AUTH_SEED, TREASURY_AUTH_SEED};
+use crate::state::{
+    StakingInfo, UserInfo, STAKING_FUND_AUTH_SEED, TREASURY_AUTH_SEED, USER_INFO_SEED,
+};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
     #[account(init, payer = admin, space = StakingInfo::LEN)]
-    pub staking_info: Account<'info, StakingInfo>,
+    pub staking_info: Box<Account<'info, StakingInfo>>,
 
     /// CHECK: Treasury auth PDA
     #[account(
@@ -59,4 +61,46 @@ pub struct UpdateParam<'info> {
     pub authority: Signer<'info>,
     #[account(mut)]
     pub staking_info: Account<'info, StakingInfo>,
+}
+
+#[derive(Accounts)]
+pub struct Stake<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(mut)]
+    pub staking_info: Box<Account<'info, StakingInfo>>,
+
+    #[account(init_if_needed, payer = user, space = UserInfo::LEN,
+        seeds = [
+            USER_INFO_SEED.as_bytes(),
+            staking_info.key().as_ref(),
+            user.key().as_ref(),
+        ],
+        bump
+    )]
+    pub user_info: Box<Account<'info, UserInfo>>,
+
+    #[account(mut,
+        constraint = user_ggwp_wallet.mint == staking_info.ggwp_token
+        @StakingError::InvalidUserGGWPWalletMint,
+        constraint = user_ggwp_wallet.owner == user.key()
+        @StakingError::InvalidUserGGWPWalletOwner,
+    )]
+    pub user_ggwp_wallet: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut,
+        constraint = treasury.key() == staking_info.treasury
+        @StakingError::InvalidTreasuryPK,
+    )]
+    pub treasury: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut,
+        constraint = accumulative_fund.key() == staking_info.accumulative_fund
+        @StakingError::InvalidAccumulativeFundPK,
+    )]
+    pub accumulative_fund: Box<Account<'info, TokenAccount>>,
+
+    // Misc.
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
 }

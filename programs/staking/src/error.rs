@@ -29,14 +29,22 @@ pub enum StakingError {
     InvalidAccumulativeFundPK, // 6009
     #[msg("Invalid treasury mint PK")]
     InvalidTreasuryMint, // 6010
+    #[msg("Invalid treasury PK")]
+    InvalidTreasuryPK, // 6011
     #[msg("Invalid treasury owner PK")]
-    InvalidTreasuryOwner, // 6011
+    InvalidTreasuryOwner, // 6012
     #[msg("Invalid user GGWP wallet mint")]
-    InvalidUserGGWPWalletMint, // 6012
+    InvalidUserGGWPWalletMint, // 6013
+    #[msg("Invalid user GGWP wallet owner")]
+    InvalidUserGGWPWalletOwner, // 6014
     #[msg("Invalid staking fund mint PK")]
-    InvalidStakingFundMint, // 6013
+    InvalidStakingFundMint, // 6015
     #[msg("Invalid staking fund owner PK")]
-    InvalidStakingFundOwner, // 6014
+    InvalidStakingFundOwner, // 6016
 
-                             // Functional errors
+    // Functional errors
+    #[msg("Minimum stake amount exceeded")]
+    MinStakeAmountExceeded, // 6017
+    #[msg("Additional stake not allowed")]
+    AdditionalStakeNotAllowed, // 6018
 }

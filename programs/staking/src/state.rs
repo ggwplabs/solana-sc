@@ -4,6 +4,7 @@ pub const DESCRIMINATOR_LEN: usize = 8;
 
 pub const TREASURY_AUTH_SEED: &str = "treasury_auth";
 pub const STAKING_FUND_AUTH_SEED: &str = "staking_fund_auth";
+pub const USER_INFO_SEED: &str = "user_info";
 
 #[account]
 #[derive(Default, Debug)]
@@ -50,4 +51,16 @@ impl StakingInfo {
 
 #[account]
 #[derive(Default, Debug)]
-pub struct UserInfo {}
+pub struct UserInfo {
+    pub is_initialized: bool,
+    pub amount: u64,
+    pub stake_time: i64,
+}
+
+impl UserInfo {
+    pub const LEN: usize = DESCRIMINATOR_LEN +
+        1 + // is initialized
+        8 + // staked amount
+        8 // stake time
+        ;
+}

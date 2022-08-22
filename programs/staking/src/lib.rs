@@ -1,10 +1,13 @@
 use crate::context::*;
 use crate::error::StakingError;
+use crate::utils::calc_royalty_amount;
 use anchor_lang::prelude::*;
+use anchor_spl::token::Transfer;
 
 mod context;
 mod error;
 pub mod state;
+mod utils;
 
 declare_id!("DJQcSKGPXre9ZMJHGxdZhGYwKGBpEaQHPUpRzLuqhYWY");
 
@@ -177,5 +180,71 @@ pub mod staking {
         Ok(())
     }
 
-    // TODO: updates, stake, unstake
+    pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
+        let user = &ctx.accounts.user;
+        let staking_info = &mut ctx.accounts.staking_info;
+        let user_info = &mut ctx.accounts.user_info;
+        let user_ggwp_wallet = &ctx.accounts.user_ggwp_wallet;
+        let treasury = &ctx.accounts.treasury;
+        let accumulative_fund = &ctx.accounts.accumulative_fund;
+        let token_program = &ctx.accounts.token_program;
+        let clock = Clock::get()?;
+
+        require!(
+            amount >= staking_info.min_stake_amount,
+            StakingError::MinStakeAmountExceeded
+        );
+
+        if !user_info.is_initialized {
+            user_info.is_initialized = true;
+            user_info.amount = 0;
+            user_info.stake_time = 0;
+        }
+
+        require_eq!(user_info.amount, 0, StakingError::AdditionalStakeNotAllowed);
+
+        // TODO: mint NFT
+        
+        let royalty_amount = calc_royalty_amount(staking_info.royalty, amount)?;
+        // Transfer royalty into accumulative fund
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                Transfer {
+                    from: user_ggwp_wallet.to_account_info(),
+                    to: accumulative_fund.to_account_info(),
+                    authority: user.to_account_info(),
+                },
+            ),
+            royalty_amount,
+        )?;
+
+        let amount = amount
+            .checked_sub(royalty_amount)
+            .ok_or(StakingError::Overflow)?;
+
+        // Transfer amount into treasury
+        anchor_spl::token::transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                Transfer {
+                    from: user_ggwp_wallet.to_account_info(),
+                    to: treasury.to_account_info(),
+                    authority: user.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
+
+        user_info.amount = amount;
+        user_info.stake_time = clock.unix_timestamp;
+        staking_info.total_staked = staking_info
+            .total_staked
+            .checked_add(amount)
+            .ok_or(StakingError::Overflow)?;
+
+        Ok(())
+    }
+
+    // TODO: stake, unstake
 }

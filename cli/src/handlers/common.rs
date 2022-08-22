@@ -59,6 +59,7 @@ pub fn cmd_init_all(
     update_auth: Pubkey,
     ggwp_token: Pubkey,
 ) -> Result<(), ClientError> {
+    // TODO: deploy command
     // Initial checks
     assert_eq!(gpass::id(), gpass_program.id());
     assert_eq!(freezing::id(), freezing_program.id());
