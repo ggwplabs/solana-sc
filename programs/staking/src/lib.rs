@@ -39,6 +39,8 @@ pub mod staking {
         require_neq!(apr_step, 0, StakingError::InvalidAPR);
         require_neq!(apr_end, 0, StakingError::InvalidAPR);
 
+        let clock = Clock::get()?;
+
         let staking_info = &mut ctx.accounts.staking_info;
         staking_info.admin = ctx.accounts.admin.key();
         staking_info.update_auth = update_auth;
@@ -52,6 +54,7 @@ pub mod staking {
         staking_info.treasury_auth_bump = ctx.bumps["treasury_auth"];
 
         staking_info.total_staked = 0;
+        staking_info.start_time = clock.unix_timestamp;
         staking_info.epoch = 1;
         staking_info.epoch_period_days = epoch_period_days;
         staking_info.min_stake_amount = min_stake_amount;

@@ -21,6 +21,7 @@ pub struct StakingInfo {
     pub treasury_auth_bump: u8,
 
     pub total_staked: u64,
+    pub start_time: i64,
     pub epoch: u64,
     pub epoch_period_days: u16,
     pub min_stake_amount: u64,
@@ -40,6 +41,7 @@ impl StakingInfo {
         32 + 1 + // staking fund + bump
         32 + 1 + // treasury auth + bump
         8 + // total staked
+        8 + // start time
         8 + // current epoch
         2 + // epoch length in days
         8 + // minimum stake amount
