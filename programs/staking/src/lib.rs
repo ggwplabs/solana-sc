@@ -210,6 +210,7 @@ pub mod staking {
         // TODO: mint NFT
 
         let royalty_amount = utils::calc_royalty_amount(staking_info.royalty, amount)?;
+        msg!("Accumulative fund royalty: {}", royalty_amount);
         // Transfer royalty into accumulative fund
         anchor_spl::token::transfer(
             CpiContext::new(

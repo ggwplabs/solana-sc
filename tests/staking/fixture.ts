@@ -57,9 +57,9 @@ export async function prepareStakingTestFixture(staking: Program<Staking>): Prom
     const stakingFund = await utils.createTokenWallet(ggwpToken, stakingFundAuth);
 
     const userGgwpTokenWallet = await utils.createTokenWallet(ggwpToken, user.publicKey);
-    await utils.mintTokens(ggwpToken, admin, userGgwpTokenWallet, 100_000_000_000);
+    await utils.mintTokens(ggwpToken, admin, userGgwpTokenWallet, 10000_000_000_000);
 
-    const userFreezingInfo = findProgramAddressSync(
+    const userInfo = findProgramAddressSync(
         [
             utf8.encode(utils.USER_INFO_SEED),
             stakingInfo.publicKey.toBytes(),
@@ -83,7 +83,7 @@ export async function prepareStakingTestFixture(staking: Program<Staking>): Prom
         },
         user: {
             kp: user,
-            info: userFreezingInfo,
+            info: userInfo,
             ggwpWallet: userGgwpTokenWallet,
         }
     }
