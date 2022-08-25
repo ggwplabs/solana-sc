@@ -1,6 +1,7 @@
 use crate::error::StakingError;
 use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
 use anchor_spl::token::spl_token::{amount_to_ui_amount, ui_amount_to_amount};
+use std::ops::Mul;
 
 /// Get the percent value.
 pub fn calc_royalty_amount(royalty: u8, amount: u64) -> Result<u64> {
@@ -56,10 +57,37 @@ pub fn get_apr_by_epoch(epoch: u64, start_apr: u8, step_apr: u8, end_apr: u8) ->
     }
 }
 
+// TODO: test
+/// Get the vector of epoch past since start time
+pub fn calc_user_past_epochs(
+    staking_start_time: UnixTimestamp,
+    user_stake_time: UnixTimestamp,
+    current_time: UnixTimestamp,
+    epoch_period_days: u16,
+) -> Result<Vec<u64>> {
+    let mut epochs = vec![];
+    let user_start_epoch =
+        get_epoch_by_time(staking_start_time, user_stake_time, epoch_period_days)?;
+    let user_end_epoch = get_epoch_by_time(user_stake_time, current_time, epoch_period_days)?;
+
+    for epoch in user_start_epoch..user_end_epoch {
+        epochs.push(epoch);
+    }
+
+    Ok(epochs)
+}
+
+// TODO: test
 /// Calc user reward amount by user stake amount, epoch staked.
 pub fn calc_user_reward_amount(
+    epoch_period_days: u16,
+    staking_start_time: UnixTimestamp,
+    staking_start_apr: u8,
+    staking_step_apr: u8,
+    staking_end_apr: u8,
     user_staked_amount: u64,
     user_stake_time: UnixTimestamp,
+    current_time: UnixTimestamp,
 ) -> Result<u64> {
     // 1/365 const
     const DEGREE: f64 = 0.002739726027397;
@@ -67,7 +95,24 @@ pub fn calc_user_reward_amount(
     // r_дн = apr_current ^ DEGREE - дневной процент внутри эпохи с apr_current
     // (amount * (1 + r_дн) ^ epoch_period_days) - сумма заработка юзера за эпоху
     // далее переход на новую эпоху, где новый r_дн и эмаунт это сумма с прошлой эпохи
-    Ok(0)
+
+    let user_staked_amount = amount_to_ui_amount(user_staked_amount, 9);
+    let epochs = calc_user_past_epochs(
+        staking_start_time,
+        user_stake_time,
+        current_time,
+        epoch_period_days,
+    )?;
+
+    let mut user_reward = user_staked_amount;
+    for epoch in epochs {
+        let current_apr =
+            get_apr_by_epoch(epoch, staking_start_apr, staking_step_apr, staking_end_apr)? as f64;
+        let r_day = current_apr.powf(DEGREE);
+        user_reward = user_reward.mul((1.0 + r_day).powi(epoch_period_days as i32));
+    }
+
+    Ok(user_reward as u64)
 }
 
 #[cfg(test)]

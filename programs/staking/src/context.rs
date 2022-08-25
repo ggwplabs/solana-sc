@@ -140,6 +140,16 @@ pub struct Withdraw<'info> {
     )]
     pub treasury_auth: UncheckedAccount<'info>,
 
+    /// CHECK: Staking fund auth PDA
+    #[account(
+        seeds = [
+            STAKING_FUND_AUTH_SEED.as_bytes(),
+            staking_info.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub staking_fund_auth: UncheckedAccount<'info>,
+
     #[account(mut,
         constraint = treasury.key() == staking_info.treasury
         @StakingError::InvalidTreasuryPK,
@@ -151,6 +161,14 @@ pub struct Withdraw<'info> {
         @StakingError::InvalidAccumulativeFundPK,
     )]
     pub accumulative_fund: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        constraint = staking_fund.mint == staking_info.ggwp_token
+        @StakingError::InvalidStakingFundMint,
+        constraint = staking_fund.owner == staking_fund_auth.key()
+        @StakingError::InvalidStakingFundOwner,
+    )]
+    pub staking_fund: Box<Account<'info, TokenAccount>>,
 
     // Misc.
     pub system_program: Program<'info, System>,

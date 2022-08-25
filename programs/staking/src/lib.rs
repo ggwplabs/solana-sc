@@ -1,6 +1,6 @@
 use crate::context::*;
 use crate::error::StakingError;
-use crate::state::TREASURY_AUTH_SEED;
+use crate::state::{STAKING_FUND_AUTH_SEED, TREASURY_AUTH_SEED};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Transfer;
 
@@ -253,12 +253,13 @@ pub mod staking {
 
     /// User can withdraw full amount of GGWP with extra reward.
     pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
-        let user = &ctx.accounts.user;
         let staking_info = &mut ctx.accounts.staking_info;
         let user_info = &mut ctx.accounts.user_info;
         let user_ggwp_wallet = &ctx.accounts.user_ggwp_wallet;
         let treasury = &ctx.accounts.treasury;
         let treasury_auth = &ctx.accounts.treasury_auth;
+        let staking_fund = &ctx.accounts.staking_fund;
+        let staking_fund_auth = &ctx.accounts.staking_fund_auth;
         let accumulative_fund = &ctx.accounts.accumulative_fund;
         let token_program = &ctx.accounts.token_program;
         let clock = Clock::get()?;
@@ -266,9 +267,17 @@ pub mod staking {
         let mut amount = user_info.amount;
         require_neq!(amount, 0, StakingError::NothingToWithdraw);
 
-        // TODO: Calc GGWP reward for user
+        let user_reward = utils::calc_user_reward_amount(
+            staking_info.epoch_period_days,
+            staking_info.start_time,
+            staking_info.apr_start,
+            staking_info.apr_step,
+            staking_info.apr_end,
+            amount,
+            user_info.stake_time,
+            clock.unix_timestamp,
+        )?;
 
-        // Get withdraw royalty if needed and transfer
         let seeds = &[
             TREASURY_AUTH_SEED.as_bytes(),
             staking_info.to_account_info().key.as_ref(),
@@ -276,6 +285,14 @@ pub mod staking {
         ];
         let treasury_auth_signer = &[&seeds[..]];
 
+        let seeds = &[
+            STAKING_FUND_AUTH_SEED.as_bytes(),
+            staking_info.to_account_info().key.as_ref(),
+            &[staking_info.staking_fund_auth_bump],
+        ];
+        let staking_fund_auth_signer = &[&seeds[..]];
+
+        // Get withdraw royalty if needed and transfer
         if utils::is_withdraw_royalty(
             clock.unix_timestamp,
             user_info.stake_time,
@@ -301,7 +318,33 @@ pub mod staking {
                 .ok_or(StakingError::Overflow)?;
         }
 
-        // TODO: Transfer GGWP staked amount + reward to user - withdraw royalty
+        // Transfer GGWP reward to user from staking fund
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: staking_fund.to_account_info(),
+                    to: accumulative_fund.to_account_info(),
+                    authority: staking_fund_auth.to_account_info(),
+                },
+                staking_fund_auth_signer,
+            ),
+            user_reward,
+        )?;
+
+        // Transfer GGWP staked tokens to user from treasury
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: treasury.to_account_info(),
+                    to: user_ggwp_wallet.to_account_info(),
+                    authority: treasury_auth.to_account_info(),
+                },
+                treasury_auth_signer,
+            ),
+            amount,
+        )?;
 
         user_info.amount = 0;
         user_info.stake_time = 0;
