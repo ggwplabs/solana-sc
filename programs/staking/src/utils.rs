@@ -57,12 +57,17 @@ pub fn get_epoch_by_time(
 
 /// Get the current APR by epoch.
 pub fn get_apr_by_epoch(epoch: u64, start_apr: u8, step_apr: u8, end_apr: u8) -> Result<u8> {
-    let current_apr = start_apr as u64 - step_apr as u64 * (epoch - 1);
-    let current_apr = current_apr as u8;
+    let start_apr = start_apr as u64;
+    let step_apr = step_apr as u64;
+    let end_apr = end_apr as u64;
+
+    let current_apr = start_apr
+        .checked_sub(step_apr * (epoch - 1))
+        .unwrap_or(end_apr);
     if current_apr < end_apr {
-        return Ok(end_apr);
+        return Ok(end_apr as u8);
     } else {
-        return Ok(current_apr);
+        return Ok(current_apr as u8);
     }
 }
 
@@ -92,7 +97,6 @@ pub fn calc_user_past_epochs(
     Ok(epochs)
 }
 
-// TODO: test
 /// Calc user reward amount by user stake amount, epoch staked.
 pub fn calc_user_reward_amount(
     epoch_period_days: u16,
@@ -152,24 +156,92 @@ mod tests {
 
     #[test]
     pub fn test_calc_user_reward_amount() {
-        // TODO
         let amount = 10_000_000_000;
         // User rewards for first epoch
         assert_eq!(
             calc_user_reward_amount(10, time, 10, 1, 5, amount, time, time + 10 * day),
             Ok(27431062) // 0.027431062
         );
-
-        // TODO: amounts less than 1 GGWP (0.1 etc)
-
         // User stake in half epoch
+        let amount = 10_000_000_000;
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 15 * day),
+            Ok(123973918)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 83, 1, 5, amount, time, time + 15 * day),
+            Ok(229738355)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 99, 1, 5, amount, time, time + 15 * day),
+            Ok(274567462)
+        );
+
+        // Amounts less than 1 GGWP
+        let amount = 500_000_000; // 0.5
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 20 * day),
+            Ok(12334025)
+        );
+
+        let amount = 800; // 0.0000008
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 20 * day),
+            Ok(19)
+        );
 
         // User stake in next epoch
+        let amount = 19_000_000_000;
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 20 * day),
+            Ok(468692977)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 30 * day),
+            Ok(699269917)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 40 * day),
+            Ok(927123806)
+        );
 
         // User stake in half next epoch
+        let amount = 1299_500_000_000;
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 25 * day),
+            Ok(32056132852)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 35 * day),
+            Ok(47826381988)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 45 * day),
+            Ok(63410388776)
+        );
+
+        // Check min apr limit
+        let amount = 5_000_000_000;
+        assert_eq!(
+            calc_user_reward_amount(10, time, 6, 1, 5, amount, time, time + 50 * day),
+            Ok(35741023)
+        );
 
         // Big amounts check overflow
-        let amount: u64 = 100000_000_000_000;
+        println!("-----");
+        let amount = 100000_000_000_000;
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 100 * day),
+            Ok(11727991191434)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 1000 * day),
+            Ok(43551067839644)
+        );
+        assert_eq!(
+            calc_user_reward_amount(10, time, 45, 1, 5, amount, time, time + 100000 * day),
+            Ok(18446644073709551615)
+        );
     }
 
     #[test]
