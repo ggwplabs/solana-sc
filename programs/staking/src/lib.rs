@@ -277,6 +277,7 @@ pub mod staking {
             user_info.stake_time,
             clock.unix_timestamp,
         )?;
+        msg!("User reward: {}", user_reward);
 
         let seeds = &[
             TREASURY_AUTH_SEED.as_bytes(),

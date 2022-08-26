@@ -55,6 +55,7 @@ export async function prepareStakingTestFixture(staking: Program<Staking>): Prom
         staking.programId,
     )[0];
     const stakingFund = await utils.createTokenWallet(ggwpToken, stakingFundAuth);
+    await utils.mintTokens(ggwpToken, admin, stakingFund, 10000_000_000_000);
 
     const userGgwpTokenWallet = await utils.createTokenWallet(ggwpToken, user.publicKey);
     await utils.mintTokens(ggwpToken, admin, userGgwpTokenWallet, 10000_000_000_000);

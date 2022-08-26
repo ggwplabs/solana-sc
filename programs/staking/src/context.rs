@@ -162,7 +162,7 @@ pub struct Withdraw<'info> {
     )]
     pub accumulative_fund: Box<Account<'info, TokenAccount>>,
 
-    #[account(
+    #[account(mut,
         constraint = staking_fund.mint == staking_info.ggwp_token
         @StakingError::InvalidStakingFundMint,
         constraint = staking_fund.owner == staking_fund_auth.key()
