@@ -1,5 +1,7 @@
 //! CLI Client for interacting with the smart contracts
-use crate::commands::freezing::get_freezing_commands;
+use crate::commands::{
+    common::get_common_commands, freezing::get_freezing_commands, staking::get_staking_commands,
+};
 use anchor_client::{
     solana_sdk::{
         commitment_config::CommitmentConfig, pubkey::Pubkey, signature::read_keypair_file,
@@ -19,6 +21,8 @@ fn main() {
     let app = app::get_clap_app(crate_name!(), crate_description!(), crate_version!());
     let app = app.subcommand(get_gpass_commands());
     let app = app.subcommand(get_freezing_commands());
+    let app = app.subcommand(get_staking_commands());
+    let app = app.subcommand(get_common_commands());
     let app_matches = app.get_matches();
 
     let config = if let Some(config_path) = app_matches.value_of("config") {
@@ -55,6 +59,29 @@ fn main() {
             .expect("Freezing handle error");
         }
 
+        (commands::CMDS_STAKING, Some(cmd_matches)) => {
+            handlers::staking::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.staking)
+                    .expect("Error in parsing staking program id"),
+            )
+            .expect("Staking handler error");
+        }
+
+        (commands::CMDS_COMMON, Some(cmd_matches)) => {
+            handlers::common::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.gpass)
+                    .expect("Error in parsing gpass program id"),
+                Pubkey::from_str(&config.programs.freezing)
+                    .expect("Error in parsing freezing program id"),
+                Pubkey::from_str(&config.programs.staking)
+                    .expect("Error in parsing staking program id"),
+            )
+            .expect("Common handler error");
+        }
         _ => {
             println!("{}", app_matches.usage());
         }

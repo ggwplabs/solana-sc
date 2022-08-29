@@ -22,6 +22,7 @@ spl-associated-token-account = "1.0.3"
 # Smart contracts
 gpass = { path = "../programs/gpass", features = ["no-entrypoint"] }
 freezing = { path = "../programs/freezing", features = ["no-entrypoint"] }
+staking = { path = "../programs/staking", features = ["no-entrypoint"] }
 
 [[bin]]
 name = "cli-client"

@@ -5,7 +5,18 @@ use anchor_client::{
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
-use spl_token::state::Account as TokenAccount;
+use spl_token::state::{Account as TokenAccount, Mint};
+
+pub fn get_token_mint_data(program: &Program, token_mint: Pubkey) -> Result<Mint, ClientError> {
+    let account = program
+        .rpc()
+        .get_account_with_commitment(&token_mint, program.rpc().commitment())?
+        .value
+        .unwrap();
+
+    let token_mint_data = Mint::unpack(&account.data).unwrap();
+    return Ok(token_mint_data);
+}
 
 pub fn get_or_create_token_account(
     program: &Program,
