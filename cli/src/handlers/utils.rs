@@ -1,38 +1,11 @@
 use anchor_client::{
-    solana_sdk::{
-        program_option::COption, program_pack::Pack, pubkey::Pubkey, signature::Keypair,
-        signer::Signer,
-    },
+    solana_sdk::{program_pack::Pack, pubkey::Pubkey},
     ClientError, Program,
 };
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
-use spl_token::{
-    instruction::initialize_mint,
-    state::{Account as TokenAccount, Mint},
-};
-
-pub fn create_token_mint(
-    program: &Program,
-    mint_authority: Pubkey,
-    decimals: u8,
-) -> Result<Pubkey, ClientError> {
-    let token_mint = Keypair::new();
-
-    program
-        .request()
-        .instruction(initialize_mint(
-            &spl_token::id(),
-            &token_mint.pubkey(),
-            &mint_authority,
-            None,
-            decimals,
-        )?)
-        .send()?;
-
-    Ok(token_mint.pubkey())
-}
+use spl_token::state::{Account as TokenAccount, Mint};
 
 pub fn get_token_mint_data(program: &Program, token_mint: Pubkey) -> Result<Mint, ClientError> {
     let account = program

@@ -60,7 +60,13 @@ fn main() {
         }
 
         (commands::CMDS_STAKING, Some(cmd_matches)) => {
-            // TODO: handlers staking
+            handlers::staking::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.staking)
+                    .expect("Error in parsing staking program id"),
+            )
+            .expect("Staking handler error");
         }
 
         (commands::CMDS_COMMON, Some(cmd_matches)) => {
