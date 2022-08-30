@@ -1021,6 +1021,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "distribution"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+]
+
+[[package]]
 name = "dlopen"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

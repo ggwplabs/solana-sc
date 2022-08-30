@@ -5,6 +5,7 @@ skip-lint = false
 gpass = "Gv9WAng6iPymaDwXMQrbsh2uTkDpAPTB89Ld4ctJejMG"
 freezing = "ABHUowgjyTkmbMRRuMYJ5ui4wAz6Z6HE4PQMHy9YqMrQ"
 staking = "DJQcSKGPXre9ZMJHGxdZhGYwKGBpEaQHPUpRzLuqhYWY"
+distribution = "79GShMQgEBcfpiiwkBxv3yBxHqCN8J2E8DhivatqpfYC"
 
 [registry]
 url = "https://api.apr.dev"
