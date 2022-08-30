@@ -26,4 +26,8 @@ pub enum DistributionError {
 
     #[msg("Invalid share percent value")]
     InvalidShare, // 6008
+    #[msg("Invalid fund PK")]
+    InvalidFundPublicKey, // 6009
+    #[msg("Empty accumulative fund")]
+    EmptyAccumulativeFund, // 6010
 }

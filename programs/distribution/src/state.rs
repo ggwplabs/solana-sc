@@ -14,6 +14,7 @@ pub struct DistributionInfo {
     pub accumulative_fund: Pubkey,
     pub accumulative_fund_auth_bump: u8,
 
+    pub last_distribution: i64,
     pub play_to_earn_fund: Pubkey,
     pub play_to_earn_fund_share: u8,
     pub staking_fund: Pubkey,
@@ -29,6 +30,7 @@ impl DistributionInfo {
         32 + 32 + // admin, update auth pks
         32 + // ggwp token mint
         32 + 1 + // accumulative fund + auth bump
+        32 + // last distribution timestamp
         32 + 1 + // play to earn fund + share
         32 + 1 + // staking fund + share
         32 + 1 + // company fund + share
