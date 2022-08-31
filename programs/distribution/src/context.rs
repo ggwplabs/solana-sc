@@ -16,7 +16,6 @@ pub struct Initialize<'info> {
         seeds = [
             ACCUMULATIVE_FUND_AUTH_SEED.as_bytes(),
             distribution_info.key().as_ref(),
-            accumulative_fund.key().as_ref(),
         ],
         bump
     )]
@@ -71,7 +70,6 @@ pub struct Distribute<'info> {
         seeds = [
             ACCUMULATIVE_FUND_AUTH_SEED.as_bytes(),
             distribution_info.key().as_ref(),
-            accumulative_fund.key().as_ref(),
         ],
         bump = distribution_info.accumulative_fund_auth_bump,
     )]

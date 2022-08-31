@@ -142,7 +142,6 @@ pub mod distribution {
         let seeds = &[
             ACCUMULATIVE_FUND_AUTH_SEED.as_bytes(),
             distribution_info.to_account_info().key.as_ref(),
-            accumulative_fund.to_account_info().key.as_ref(),
             &[distribution_info.accumulative_fund_auth_bump],
         ];
         let accumulative_fund_auth_signer = &[&seeds[..]];
