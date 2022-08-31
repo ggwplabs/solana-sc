@@ -30,6 +30,11 @@ pub mod distribution {
         require!(staking_fund_share <= 100, DistributionError::InvalidShare);
         require!(company_fund_share <= 100, DistributionError::InvalidShare);
         require!(team_fund_share <= 100, DistributionError::InvalidShare);
+        require!(
+            (play_to_earn_fund_share + staking_fund_share + company_fund_share + team_fund_share)
+                == 100,
+            DistributionError::InvalidShare
+        );
 
         let distribution_info = &mut ctx.accounts.distribution_info;
         distribution_info.admin = ctx.accounts.admin.key();
@@ -52,7 +57,69 @@ pub mod distribution {
         Ok(())
     }
 
-    // TODO: update methods
+    /// Admin can set the new admin.
+    pub fn update_admin(ctx: Context<UpdateParam>, admin: Pubkey) -> Result<()> {
+        let distribution_info = &mut ctx.accounts.distribution_info;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            distribution_info.admin,
+            DistributionError::AccessDenied
+        );
+
+        distribution_info.admin = admin;
+
+        Ok(())
+    }
+
+    /// Admin can set the new update authority.
+    pub fn set_update_authority(ctx: Context<UpdateParam>, update_auth: Pubkey) -> Result<()> {
+        let distribution_info = &mut ctx.accounts.distribution_info;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            distribution_info.admin,
+            DistributionError::AccessDenied
+        );
+
+        distribution_info.update_auth = update_auth;
+
+        Ok(())
+    }
+
+    /// Update authority can set the new shares.
+    pub fn update_shares(
+        ctx: Context<UpdateParam>,
+        play_to_earn_fund_share: u8,
+        staking_fund_share: u8,
+        company_fund_share: u8,
+        team_fund_share: u8,
+    ) -> Result<()> {
+        let distribution_info = &mut ctx.accounts.distribution_info;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            distribution_info.update_auth,
+            DistributionError::AccessDenied
+        );
+
+        require!(
+            play_to_earn_fund_share <= 100,
+            DistributionError::InvalidShare
+        );
+        require!(staking_fund_share <= 100, DistributionError::InvalidShare);
+        require!(company_fund_share <= 100, DistributionError::InvalidShare);
+        require!(team_fund_share <= 100, DistributionError::InvalidShare);
+        require!(
+            (play_to_earn_fund_share + staking_fund_share + company_fund_share + team_fund_share)
+                == 100,
+            DistributionError::InvalidShare
+        );
+
+        distribution_info.play_to_earn_fund_share = play_to_earn_fund_share;
+        distribution_info.staking_fund_share = staking_fund_share;
+        distribution_info.company_fund_share = company_fund_share;
+        distribution_info.team_fund_share = team_fund_share;
+
+        Ok(())
+    }
 
     /// Anyone can run the distribution of GGWP tokens.
     pub fn distribute(ctx: Context<Distribute>) -> Result<()> {

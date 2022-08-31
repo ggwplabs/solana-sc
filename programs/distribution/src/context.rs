@@ -55,6 +55,13 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
+pub struct UpdateParam<'info> {
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub distribution_info: Account<'info, DistributionInfo>,
+}
+
+#[derive(Accounts)]
 pub struct Distribute<'info> {
     #[account(mut)]
     pub distribution_info: Box<Account<'info, DistributionInfo>>,
