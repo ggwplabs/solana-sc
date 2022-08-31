@@ -5,10 +5,11 @@ use anchor_client::anchor_lang::system_program;
 use anchor_client::solana_sdk::program_option::COption;
 use anchor_client::solana_sdk::signature::Keypair;
 use anchor_client::solana_sdk::signer::Signer;
-use anchor_client::ClientError;
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client, Program};
+use anchor_client::{ClientError, Cluster};
 use clap::value_t_or_exit;
 use clap::{ArgMatches, Error};
+use distribution::state::DistributionInfo;
 use freezing::state::{FreezingInfo, RewardTableRow, GPASS_MINT_AUTH_SEED};
 use gpass::state::GpassInfo;
 use spl_token::amount_to_ui_amount;
@@ -18,13 +19,20 @@ use staking::state::{StakingInfo, STAKING_FUND_AUTH_SEED};
 pub fn handle(
     cmd_matches: &ArgMatches,
     client: &Client,
+    cluster: &Cluster,
     gpass_program_id: Pubkey,
     freezing_program_id: Pubkey,
     staking_program_id: Pubkey,
+    distribution_program_id: Pubkey,
 ) -> Result<(), Error> {
     let gpass_program = client.program(gpass_program_id);
     let freezing_program = client.program(freezing_program_id);
     let staking_program = client.program(staking_program_id);
+    let distribution_program = client.program(distribution_program_id);
+
+    let params = ProgramsParams::get_by_cluster(cluster);
+    println!("Cluster: {}", cluster.url());
+    println!("Params: {:?}", params);
 
     let (sub_command, arg_matches) = cmd_matches.subcommand();
     match (sub_command, arg_matches) {
@@ -37,6 +45,8 @@ pub fn handle(
                 gpass_program,
                 freezing_program,
                 staking_program,
+                distribution_program,
+                params,
                 update_auth,
                 ggwp_token,
             )
@@ -56,6 +66,8 @@ pub fn cmd_init_all(
     gpass_program: Program,
     freezing_program: Program,
     staking_program: Program,
+    distribution_program: Program,
+    params: ProgramsParams,
     update_auth: Pubkey,
     ggwp_token: Pubkey,
 ) -> Result<(), ClientError> {
@@ -64,16 +76,19 @@ pub fn cmd_init_all(
     assert_eq!(gpass::id(), gpass_program.id());
     assert_eq!(freezing::id(), freezing_program.id());
     assert_eq!(staking::id(), staking_program.id());
+    assert_eq!(distribution::id(), distribution_program.id());
 
     let admin_pk = gpass_program.payer();
     assert_eq!(admin_pk, freezing_program.payer());
     assert_eq!(admin_pk, staking_program.payer());
+    assert_eq!(admin_pk, distribution_program.payer());
 
     println!("Admin PK: {}", admin_pk);
     println!("Update authority: {}", update_auth);
+    println!();
 
     let admin_balance_before = gpass_program.rpc().get_balance(&admin_pk)?;
-    assert!(admin_balance_before > 10_000_000_000); // TODO: calc amount for full init
+    assert!(admin_balance_before > 10_000_000_000);
 
     let ggwp_token_data: Mint = get_token_mint_data(&gpass_program, ggwp_token)?;
     assert_eq!(ggwp_token_data.is_initialized, true);
@@ -84,10 +99,13 @@ pub fn cmd_init_all(
     let gpass_info = Keypair::new();
     let freezing_info = Keypair::new();
     let staking_info = Keypair::new();
+    let distribution_info = Keypair::new();
 
     println!("New GPASS info PK: {}", gpass_info.pubkey());
     println!("New freezing info PK: {}", freezing_info.pubkey());
     println!("New staking info PK: {}", staking_info.pubkey());
+    println!("New distribution info PK: {}", distribution_info.pubkey());
+    println!();
 
     // Generate pks for authorities
     let (freezing_gpass_mint_auth, _) = Pubkey::find_program_address(
@@ -127,22 +145,73 @@ pub fn cmd_init_all(
     );
     println!("Staking treasury auth: {}", staking_treasury_auth);
 
+    let (accumulative_fund_auth, _) = Pubkey::find_program_address(
+        &[
+            distribution::state::ACCUMULATIVE_FUND_AUTH_SEED.as_bytes(),
+            distribution_info.pubkey().as_ref(),
+        ],
+        &distribution_program.id(),
+    );
+    println!("Accumulative fund auth: {}", staking_treasury_auth);
+
+    println!();
+
     // Init of get all token wallets (and funds)
     let freezing_treasury =
         get_or_create_token_account(&gpass_program, ggwp_token, freezing_treasury_auth)?;
     let staking_treasury =
         get_or_create_token_account(&gpass_program, ggwp_token, staking_treasury_auth)?;
-    let accumulative_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
+    let accumulative_fund =
+        get_or_create_token_account(&gpass_program, ggwp_token, accumulative_fund_auth)?;
     let staking_fund = get_or_create_token_account(&gpass_program, ggwp_token, staking_fund_auth)?;
+    // TODO: temporary owners for wallets
+    let play_to_earn_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
+    let company_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
+    let team_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
 
     println!(
         "Accumulative fund (owner: {}): {}",
-        admin_pk, accumulative_fund
+        accumulative_fund_auth, accumulative_fund
     );
     println!(
         "Staking fund (owner: {}): {}",
         staking_fund_auth, staking_fund
     );
+    println!(
+        "Play to earn fund (owner: {}): {}",
+        admin_pk, play_to_earn_fund
+    );
+    println!("Company fund (owner: {}): {}", admin_pk, company_fund);
+    println!("Team fund (owner: {}): {}", admin_pk, team_fund);
+    println!();
+
+    // Init distribution with funds info
+    distribution_program
+        .request()
+        .accounts(distribution::accounts::Initialize {
+            admin: admin_pk,
+            distribution_info: distribution_info.pubkey(),
+            ggwp_token: ggwp_token,
+            accumulative_fund: accumulative_fund,
+            accumulative_fund_auth: accumulative_fund_auth,
+            play_to_earn_fund: play_to_earn_fund,
+            staking_fund: staking_fund,
+            company_fund: company_fund,
+            team_fund: team_fund,
+            system_program: system_program::ID,
+        })
+        .args(distribution::instruction::Initialize {
+            update_auth: update_auth,
+            play_to_earn_fund_share: params.distribution.play_to_earn_fund_share,
+            staking_fund_share: params.distribution.staking_fund_share,
+            company_fund_share: params.distribution.company_fund_share,
+            team_fund_share: params.distribution.team_fund_share,
+        })
+        .signer(&distribution_info)
+        .send()?;
+    let distribution_info_data: DistributionInfo =
+        distribution_program.account(distribution_info.pubkey())?;
+    println!("Distribution Initalized: {:?}", distribution_info_data);
 
     // Init GPASS with lists of minters and burners
     gpass_program
@@ -153,7 +222,7 @@ pub fn cmd_init_all(
             system_program: system_program::ID,
         })
         .args(gpass::instruction::Initialize {
-            burn_period: 30 * 24 * 60 * 60, // 30 days
+            burn_period: params.gpass.burn_period,
             update_auth: update_auth,
             minters: vec![freezing_gpass_mint_auth],
             burners: vec![],
@@ -203,10 +272,10 @@ pub fn cmd_init_all(
         })
         .args(freezing::instruction::Initialize {
             update_auth: update_auth,
-            reward_period: 24 * 60 * 60,
-            royalty: 8,
-            unfreeze_royalty: 15,
-            unfreeze_lock_period: 15 * 24 * 60 * 60, // 15 days
+            reward_period: params.freezing.reward_period,
+            royalty: params.freezing.royalty,
+            unfreeze_royalty: params.freezing.unfreeze_royalty,
+            unfreeze_lock_period: params.freezing.unfreeze_lock_period,
             reward_table: reward_table,
         })
         .signer(&freezing_info)
@@ -230,19 +299,21 @@ pub fn cmd_init_all(
         })
         .args(staking::instruction::Initialize {
             update_auth: update_auth,
-            epoch_period_days: 45,
-            min_stake_amount: 3000_000_000_000,
-            hold_period_days: 30,
-            hold_royalty: 15,
-            royalty: 8,
-            apr_start: 45,
-            apr_step: 1,
-            apr_end: 5,
+            epoch_period_days: params.staking.epoch_period_days,
+            min_stake_amount: params.staking.min_stake_amount,
+            hold_period_days: params.staking.hold_period_days,
+            hold_royalty: params.staking.hold_royalty,
+            royalty: params.staking.royalty,
+            apr_start: params.staking.apr_start,
+            apr_step: params.staking.apr_step,
+            apr_end: params.staking.apr_end,
         })
         .signer(&staking_info)
         .send()?;
     let staking_info_data: StakingInfo = staking_program.account(staking_info.pubkey())?;
     println!("Staking info initialized: {:?}", staking_info_data);
+
+    println!();
 
     // Calc balance diff
     let admin_balance_after = gpass_program.rpc().get_balance(&admin_pk)?;
@@ -252,4 +323,134 @@ pub fn cmd_init_all(
     );
 
     Ok(())
+}
+
+#[derive(Debug)]
+pub struct ProgramsParams {
+    pub distribution: DistributionParams,
+    pub gpass: GPASSParams,
+    pub freezing: FreezingParams,
+    pub staking: StakingParams,
+}
+
+#[derive(Debug)]
+pub struct DistributionParams {
+    pub play_to_earn_fund_share: u8,
+    pub staking_fund_share: u8,
+    pub company_fund_share: u8,
+    pub team_fund_share: u8,
+}
+
+#[derive(Debug)]
+pub struct GPASSParams {
+    pub burn_period: u64,
+}
+
+#[derive(Debug)]
+pub struct FreezingParams {
+    pub reward_period: i64,
+    pub royalty: u8,
+    pub unfreeze_royalty: u8,
+    pub unfreeze_lock_period: i64,
+}
+
+#[derive(Debug)]
+pub struct StakingParams {
+    pub epoch_period_days: u16,
+    pub min_stake_amount: u64,
+    pub hold_period_days: u16,
+    pub hold_royalty: u8,
+    pub royalty: u8,
+    pub apr_start: u8,
+    pub apr_step: u8,
+    pub apr_end: u8,
+}
+
+impl ProgramsParams {
+    pub fn get_by_cluster(cluster: &Cluster) -> Self {
+        match cluster {
+            Cluster::Devnet => ProgramsParams {
+                distribution: DistributionParams {
+                    play_to_earn_fund_share: 45,
+                    staking_fund_share: 40,
+                    company_fund_share: 5,
+                    team_fund_share: 10,
+                },
+                gpass: GPASSParams {
+                    burn_period: 1 * 24 * 60 * 60,
+                },
+                freezing: FreezingParams {
+                    reward_period: 6 * 60 * 60,
+                    royalty: 8,
+                    unfreeze_royalty: 15,
+                    unfreeze_lock_period: 3 * 24 * 60 * 60,
+                },
+                staking: StakingParams {
+                    epoch_period_days: 5,
+                    min_stake_amount: 3000_000_000_000,
+                    hold_period_days: 2,
+                    hold_royalty: 15,
+                    royalty: 8,
+                    apr_start: 45,
+                    apr_step: 1,
+                    apr_end: 5,
+                },
+            },
+            Cluster::Testnet => ProgramsParams {
+                distribution: DistributionParams {
+                    play_to_earn_fund_share: 45,
+                    staking_fund_share: 40,
+                    company_fund_share: 5,
+                    team_fund_share: 10,
+                },
+                gpass: GPASSParams {
+                    burn_period: 1 * 24 * 60 * 60,
+                },
+                freezing: FreezingParams {
+                    reward_period: 6 * 60 * 60,
+                    royalty: 8,
+                    unfreeze_royalty: 15,
+                    unfreeze_lock_period: 3 * 24 * 60 * 60,
+                },
+                staking: StakingParams {
+                    epoch_period_days: 5,
+                    min_stake_amount: 3000_000_000_000,
+                    hold_period_days: 2,
+                    hold_royalty: 15,
+                    royalty: 8,
+                    apr_start: 45,
+                    apr_step: 1,
+                    apr_end: 5,
+                },
+            },
+            Cluster::Mainnet => ProgramsParams {
+                distribution: DistributionParams {
+                    play_to_earn_fund_share: 45,
+                    staking_fund_share: 40,
+                    company_fund_share: 5,
+                    team_fund_share: 10,
+                },
+                gpass: GPASSParams {
+                    burn_period: 30 * 24 * 60 * 60,
+                },
+                freezing: FreezingParams {
+                    reward_period: 24 * 60 * 60,
+                    royalty: 8,
+                    unfreeze_royalty: 15,
+                    unfreeze_lock_period: 15 * 24 * 60 * 60,
+                },
+                staking: StakingParams {
+                    epoch_period_days: 45,
+                    min_stake_amount: 3000_000_000_000,
+                    hold_period_days: 30,
+                    hold_royalty: 15,
+                    royalty: 8,
+                    apr_start: 45,
+                    apr_step: 1,
+                    apr_end: 5,
+                },
+            },
+            _ => panic!("Bad cluster"),
+        }
+    }
 }

@@ -718,6 +718,7 @@ dependencies = [
  "borsh",
  "clap",
  "dirs-next",
+ "distribution",
  "freezing",
  "gpass",
  "serde",

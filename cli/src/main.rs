@@ -35,7 +35,11 @@ fn main() {
     let payer = read_keypair_file(&config.fee_payer_path).expect("Reading payer keypair error");
     println!("RPC Client URL: {}", cluster.url());
 
-    let client = Client::new_with_options(cluster, Rc::new(payer), CommitmentConfig::processed());
+    let client = Client::new_with_options(
+        cluster.clone(),
+        Rc::new(payer),
+        CommitmentConfig::processed(),
+    );
     let (sub_command, cmd_matches) = app_matches.subcommand();
     match (sub_command, cmd_matches) {
         (commands::CMDS_GPASS, Some(cmd_matches)) => {
@@ -73,12 +77,15 @@ fn main() {
             handlers::common::handle(
                 cmd_matches,
                 &client,
+                &cluster,
                 Pubkey::from_str(&config.programs.gpass)
                     .expect("Error in parsing gpass program id"),
                 Pubkey::from_str(&config.programs.freezing)
                     .expect("Error in parsing freezing program id"),
                 Pubkey::from_str(&config.programs.staking)
                     .expect("Error in parsing staking program id"),
+                Pubkey::from_str(&config.programs.distribution)
+                    .expect("Error in parsing distribution program id"),
             )
             .expect("Common handler error");
         }
