@@ -1,6 +1,7 @@
 //! CLI Client for interacting with the smart contracts
 use crate::commands::{
-    common::get_common_commands, freezing::get_freezing_commands, staking::get_staking_commands,
+    common::get_common_commands, distribution::get_distribution_commands,
+    freezing::get_freezing_commands, staking::get_staking_commands,
 };
 use anchor_client::{
     solana_sdk::{
@@ -22,6 +23,7 @@ fn main() {
     let app = app.subcommand(get_gpass_commands());
     let app = app.subcommand(get_freezing_commands());
     let app = app.subcommand(get_staking_commands());
+    let app = app.subcommand(get_distribution_commands());
     let app = app.subcommand(get_common_commands());
     let app_matches = app.get_matches();
 
@@ -71,6 +73,16 @@ fn main() {
                     .expect("Error in parsing staking program id"),
             )
             .expect("Staking handler error");
+        }
+
+        (commands::CMDS_DISTRIBUTION, Some(cmd_matches)) => {
+            handlers::distribution::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.distribution)
+                    .expect("Error in parsing distribution program id"),
+            )
+            .expect("Distribution handler error");
         }
 
         (commands::CMDS_COMMON, Some(cmd_matches)) => {
