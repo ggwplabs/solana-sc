@@ -100,4 +100,27 @@ describe("Distribution functional tests", () => {
         return true;
       });
   });
+
+  it("Distribute non even number of GGWP tokens", async () => {
+    await utils.mintTokens(fixture.ggwpToken, fixture.admin, fixture.accumulativeFund, 7001_000_000_001);
+    await program.methods
+      .distribute()
+      .accounts({
+        distributionInfo: fixture.info.publicKey,
+        accumulativeFund: fixture.accumulativeFund,
+        accumulativeFundAuth: fixture.accumulativeFundAuth,
+        playToEarnFund: fixture.playToEarnFund,
+        stakingFund: fixture.stakingFund,
+        companyFund: fixture.companyFund,
+        teamFund: fixture.teamFund,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+
+    assert.equal(await utils.getTokenBalance(fixture.accumulativeFund), 0);
+    assert.equal(await utils.getTokenBalance(fixture.playToEarnFund), 4500_000_000_000 + 3150_450_000_000);
+    assert.equal(await utils.getTokenBalance(fixture.stakingFund), 4000_000_000_000 + 2800_400_000_000);
+    assert.equal(await utils.getTokenBalance(fixture.companyFund), 500_000_000_000 + 350_050_000_000);
+    assert.equal(await utils.getTokenBalance(fixture.teamFund), 1000_000_000_000 + 700_100_000_001);
+  });
 });

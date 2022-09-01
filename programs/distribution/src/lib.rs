@@ -199,10 +199,10 @@ pub mod distribution {
         )?;
 
         // Transfer GGWP to team fund
-        let team_amount = amount
+        let team_fund_amount = amount
             .checked_sub(play_to_earn_amount + staking_fund_amount + company_fund_amount)
             .ok_or(DistributionError::Overflow)?;
-        msg!("Team fund share: {}", company_fund_amount);
+        msg!("Team fund share: {}", team_fund_amount);
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
                 token_program.to_account_info(),
@@ -213,7 +213,7 @@ pub mod distribution {
                 },
                 accumulative_fund_auth_signer,
             ),
-            team_amount,
+            team_fund_amount,
         )?;
 
         distribution_info.last_distribution = clock.unix_timestamp;
