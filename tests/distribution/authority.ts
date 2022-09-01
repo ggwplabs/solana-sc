@@ -18,32 +18,27 @@ describe("Distribution authority tests", () => {
   let fixture: DistributionTestFixture = null;
   before(async () => {
     fixture = await prepareDistributionTestFixture(program);
-    try {
-      await program.methods.initialize(
-        fixture.updateAuth.publicKey,
-        playToEarnFundShare,
-        stakingFundShare,
-        companyFundShare,
-        teamFundShare,
-      )
-        .accounts({
-          admin: fixture.admin.publicKey,
-          distributionInfo: fixture.info.publicKey,
-          ggwpToken: fixture.ggwpToken,
-          accumulativeFund: fixture.accumulativeFund,
-          accumulativeFundAuth: fixture.accumulativeFundAuth,
-          playToEarnFund: fixture.playToEarnFund,
-          stakingFund: fixture.stakingFund,
-          companyFund: fixture.companyFund,
-          teamFund: fixture.teamFund,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([fixture.admin, fixture.info])
-        .rpc();
-    }
-    catch (e: any) {
-      console.log(e);
-    }
+    await program.methods.initialize(
+      fixture.updateAuth.publicKey,
+      playToEarnFundShare,
+      stakingFundShare,
+      companyFundShare,
+      teamFundShare,
+    )
+      .accounts({
+        admin: fixture.admin.publicKey,
+        distributionInfo: fixture.info.publicKey,
+        ggwpToken: fixture.ggwpToken,
+        accumulativeFund: fixture.accumulativeFund,
+        accumulativeFundAuth: fixture.accumulativeFundAuth,
+        playToEarnFund: fixture.playToEarnFund,
+        stakingFund: fixture.stakingFund,
+        companyFund: fixture.companyFund,
+        teamFund: fixture.teamFund,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([fixture.admin, fixture.info])
+      .rpc();
 
     const distributionInfoData = await program.account.distributionInfo.fetch(fixture.info.publicKey);
     assert.ok(distributionInfoData.admin.equals(fixture.admin.publicKey));
