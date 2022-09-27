@@ -10,6 +10,7 @@ export const TREASURY_AUTH_SEED = "treasury_auth";
 export const STAKING_FUND_AUTH_SEED = "staking_fund_auth";
 export const USER_INFO_SEED = "user_info";
 export const USER_WALLET_SEED = "user_gpass_wallet";
+export const ACCUMULATIVE_FUND_AUTH_SEED = "accumulative_fund_auth";
 
 export async function airdropSol(conn: Connection, to: PublicKey, amount: number) {
     const airdropSignature = await conn.requestAirdrop(to, amount);

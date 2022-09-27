@@ -7,6 +7,20 @@ use spl_associated_token_account::{
 };
 use spl_token::state::{Account as TokenAccount, Mint};
 
+pub fn get_token_account_data(
+    program: &Program,
+    token_account: Pubkey,
+) -> Result<TokenAccount, ClientError> {
+    let account = program
+        .rpc()
+        .get_account_with_commitment(&token_account, program.rpc().commitment())?
+        .value
+        .unwrap();
+
+    let token_account_data = TokenAccount::unpack(&account.data).unwrap();
+    return Ok(token_account_data);
+}
+
 pub fn get_token_mint_data(program: &Program, token_mint: Pubkey) -> Result<Mint, ClientError> {
     let account = program
         .rpc()

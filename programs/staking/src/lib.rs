@@ -9,7 +9,7 @@ mod error;
 pub mod state;
 mod utils;
 
-declare_id!("DJQcSKGPXre9ZMJHGxdZhGYwKGBpEaQHPUpRzLuqhYWY");
+declare_id!("ELRFw9awBQFuvvxnf3R1Xaihdy6ypWY7sH6nTNXh8EX1");
 
 #[program]
 pub mod staking {

@@ -15,6 +15,7 @@ pub struct Programs {
     pub gpass: String,
     pub freezing: String,
     pub staking: String,
+    pub distribution: String,
 }
 
 impl Default for CLIConfig {
@@ -29,6 +30,7 @@ impl Default for CLIConfig {
             gpass: gpass::id().to_string(),
             freezing: freezing::id().to_string(),
             staking: staking::id().to_string(),
+            distribution: distribution::id().to_string(),
         };
 
         Self {

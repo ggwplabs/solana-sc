@@ -4,6 +4,7 @@
     "programs": {
         "gpass": "<Pubkey>",
         "freezing": "<Pubkey>",
-        "staking": "<Pubkey>"
+        "staking": "<Pubkey>",
+        "distribution": "<Pubkey>"
     }
 }

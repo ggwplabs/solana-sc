@@ -718,6 +718,7 @@ dependencies = [
  "borsh",
  "clap",
  "dirs-next",
+ "distribution",
  "freezing",
  "gpass",
  "serde",
@@ -1018,6 +1019,14 @@ dependencies = [
  "proc-macro2 1.0.42",
  "quote 1.0.20",
  "syn 1.0.98",
+]
+
+[[package]]
+name = "distribution"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
 ]
 
 [[package]]

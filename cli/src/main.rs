@@ -1,6 +1,7 @@
 //! CLI Client for interacting with the smart contracts
 use crate::commands::{
-    common::get_common_commands, freezing::get_freezing_commands, staking::get_staking_commands,
+    common::get_common_commands, distribution::get_distribution_commands,
+    freezing::get_freezing_commands, staking::get_staking_commands,
 };
 use anchor_client::{
     solana_sdk::{
@@ -22,6 +23,7 @@ fn main() {
     let app = app.subcommand(get_gpass_commands());
     let app = app.subcommand(get_freezing_commands());
     let app = app.subcommand(get_staking_commands());
+    let app = app.subcommand(get_distribution_commands());
     let app = app.subcommand(get_common_commands());
     let app_matches = app.get_matches();
 
@@ -35,7 +37,11 @@ fn main() {
     let payer = read_keypair_file(&config.fee_payer_path).expect("Reading payer keypair error");
     println!("RPC Client URL: {}", cluster.url());
 
-    let client = Client::new_with_options(cluster, Rc::new(payer), CommitmentConfig::processed());
+    let client = Client::new_with_options(
+        cluster.clone(),
+        Rc::new(payer),
+        CommitmentConfig::processed(),
+    );
     let (sub_command, cmd_matches) = app_matches.subcommand();
     match (sub_command, cmd_matches) {
         (commands::CMDS_GPASS, Some(cmd_matches)) => {
@@ -69,16 +75,29 @@ fn main() {
             .expect("Staking handler error");
         }
 
+        (commands::CMDS_DISTRIBUTION, Some(cmd_matches)) => {
+            handlers::distribution::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.distribution)
+                    .expect("Error in parsing distribution program id"),
+            )
+            .expect("Distribution handler error");
+        }
+
         (commands::CMDS_COMMON, Some(cmd_matches)) => {
             handlers::common::handle(
                 cmd_matches,
                 &client,
+                &cluster,
                 Pubkey::from_str(&config.programs.gpass)
                     .expect("Error in parsing gpass program id"),
                 Pubkey::from_str(&config.programs.freezing)
                     .expect("Error in parsing freezing program id"),
                 Pubkey::from_str(&config.programs.staking)
                     .expect("Error in parsing staking program id"),
+                Pubkey::from_str(&config.programs.distribution)
+                    .expect("Error in parsing distribution program id"),
             )
             .expect("Common handler error");
         }
