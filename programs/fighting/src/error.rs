@@ -15,5 +15,8 @@ pub enum FightingError {
     InvalidAFKTimeout, // 6002
 
     // Functional errors
-
+    #[msg("Not enough gpass for game")]
+    NotEnoughGpass, // 6003
+    #[msg("Still in game")]
+    StillInGame, // 6004
 }

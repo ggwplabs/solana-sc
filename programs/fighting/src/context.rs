@@ -1,5 +1,6 @@
-use crate::state::FightingSettings;
+use crate::state::{FightingSettings, UserInfo, GPASS_BURN_AUTH_SEED, USER_INFO_SEED};
 use anchor_lang::prelude::*;
+use gpass::state::{GpassInfo, Wallet};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -7,6 +8,19 @@ pub struct Initialize<'info> {
     pub admin: Signer<'info>,
     #[account(init, payer = admin, space = FightingSettings::LEN)]
     pub fighting_settings: Account<'info, FightingSettings>,
+
+    pub gpass_info: Box<Account<'info, GpassInfo>>,
+
+    /// CHECK: GPASS Burn auth PDA
+    #[account(
+        seeds = [
+            GPASS_BURN_AUTH_SEED.as_bytes(),
+            fighting_settings.key().as_ref(),
+            gpass_info.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub gpass_burn_auth: UncheckedAccount<'info>,
 
     // Misc.
     pub system_program: Program<'info, System>,
@@ -20,7 +34,44 @@ pub struct UpdateSetting<'info> {
 }
 
 #[derive(Accounts)]
-pub struct StartGame {}
+pub struct StartGame<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(init_if_needed, payer = user, space = UserInfo::LEN,
+        seeds = [
+            USER_INFO_SEED.as_bytes(),
+            fighting_settings.key().as_ref(),
+            user.key().as_ref(),
+        ],
+        bump
+    )]
+    pub user_info: Box<Account<'info, UserInfo>>,
+
+    pub fighting_settings: Box<Account<'info, FightingSettings>>,
+
+    #[account(mut)]
+    pub gpass_info: Box<Account<'info, GpassInfo>>,
+
+    #[account(mut)]
+    pub user_gpass_wallet: Box<Account<'info, Wallet>>,
+
+    /// CHECK: GPASS Burn auth PDA
+    #[account(
+        seeds = [
+            GPASS_BURN_AUTH_SEED.as_bytes(),
+            fighting_settings.key().as_ref(),
+            gpass_info.key().as_ref(),
+        ],
+        bump = fighting_settings.gpass_burn_auth_bump,
+    )]
+    pub gpass_burn_auth: UncheckedAccount<'info>,
+
+    // Misc.
+    /// CHECK: GPASS program
+    #[account( constraint = gpass_program.key() == gpass::id() )]
+    pub gpass_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+}
 
 #[derive(Accounts)]
 pub struct FinalizeGame {}
