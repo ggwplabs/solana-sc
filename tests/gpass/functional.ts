@@ -277,12 +277,19 @@ describe("GPASS functional tests", () => {
       .signers([minters[0]])
       .rpc();
 
-    await program.methods.tryBurnInPeriod()
+    await assert.rejects(program.methods.tryBurnInPeriod()
       .accounts({
         gpassInfo: gpassInfo.publicKey,
         wallet: user1WalletPK,
       })
-      .rpc();
+      .rpc(),
+      (e: AnchorError) => {
+        assert.ok(e.error !== undefined);
+        assert.strictEqual(e.error.errorCode.code, "PeriodNotPassed");
+        assert.strictEqual(e.error.errorCode.number, 6010);
+        assert.strictEqual(e.error.errorMessage, "Burn period not yet passed");
+        return true;
+      });
 
     const user1WalletData = await program.account.wallet.fetch(user1WalletPK);
     assert.equal(user1WalletData.amount.toNumber(), user1Amount);

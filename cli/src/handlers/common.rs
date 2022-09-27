@@ -92,7 +92,7 @@ pub fn cmd_init_all(
 
     let ggwp_token_data: Mint = get_token_mint_data(&gpass_program, ggwp_token)?;
     assert_eq!(ggwp_token_data.is_initialized, true);
-    assert_eq!(ggwp_token_data.mint_authority, COption::Some(admin_pk));
+    // assert_eq!(ggwp_token_data.mint_authority, COption::Some(admin_pk));
     assert_eq!(ggwp_token_data.freeze_authority, COption::None);
 
     // Generate kps for infos
@@ -383,12 +383,12 @@ impl ProgramsParams {
                     reward_period: 6 * 60 * 60,
                     royalty: 8,
                     unfreeze_royalty: 15,
-                    unfreeze_lock_period: 3 * 24 * 60 * 60,
+                    unfreeze_lock_period: 1 * 24 * 60 * 60,
                 },
                 staking: StakingParams {
-                    epoch_period_days: 5,
+                    epoch_period_days: 2,
                     min_stake_amount: 3000_000_000_000,
-                    hold_period_days: 2,
+                    hold_period_days: 1,
                     hold_royalty: 15,
                     royalty: 8,
                     apr_start: 45,

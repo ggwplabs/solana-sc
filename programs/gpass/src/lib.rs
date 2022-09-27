@@ -230,6 +230,7 @@ pub mod gpass {
         let time_passed = utils::time_passed(clock.unix_timestamp, wallet.last_burned)?;
         if time_passed < gpass_info.burn_period {
             msg!("Burn period not yet passed, GPASS not burned");
+            return Err(GpassError::PeriodNotPassed.into());
         } else {
             msg!("Burn period passed, {} of GPASS burned", wallet.amount);
             gpass_info.total_amount = gpass_info
