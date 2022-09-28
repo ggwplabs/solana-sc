@@ -1,4 +1,7 @@
-use crate::state::{FightingSettings, UserInfo, GPASS_BURN_AUTH_SEED, USER_INFO_SEED};
+use crate::state::{
+    Action, FightingSettings, GameInfo, GameResult, Identity, UserInfo, GAME_INFO_SEED,
+    GPASS_BURN_AUTH_SEED, USER_INFO_SEED,
+};
 use anchor_lang::prelude::*;
 use gpass::state::{GpassInfo, Wallet};
 
@@ -74,4 +77,39 @@ pub struct StartGame<'info> {
 }
 
 #[derive(Accounts)]
-pub struct FinalizeGame {}
+#[instruction(
+    game_id: u64,
+    game_result: GameResult,
+    actions_log: Vec<(Identity, Action)>,
+)]
+pub struct FinalizeGame<'info> {
+    pub user: Signer<'info>,
+    #[account(mut)]
+    pub validator: Signer<'info>,
+
+    #[account(init, payer = validator, space = GameInfo::LEN,
+        seeds = [
+            GAME_INFO_SEED.as_bytes(),
+            fighting_settings.key().as_ref(),
+            user.key().as_ref(),
+            game_id.to_le_bytes().as_ref(),
+        ],
+        bump
+    )]
+    pub game_info: Box<Account<'info, GameInfo>>,
+
+    #[account(
+        seeds = [
+            USER_INFO_SEED.as_bytes(),
+            fighting_settings.key().as_ref(),
+            user.key().as_ref(),
+        ],
+        bump
+    )]
+    pub user_info: Box<Account<'info, UserInfo>>,
+
+    pub fighting_settings: Box<Account<'info, FightingSettings>>,
+
+    // Misc.
+    pub system_program: Program<'info, System>,
+}

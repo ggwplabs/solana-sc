@@ -1,6 +1,6 @@
 use crate::context::*;
 use crate::error::FightingError;
-use crate::state::GPASS_BURN_AUTH_SEED;
+use crate::state::{GameResult, IdentityAction, GPASS_BURN_AUTH_SEED};
 use anchor_lang::prelude::*;
 
 mod context;
@@ -90,8 +90,7 @@ pub mod fighting {
             if spent_time < fighting_settings.afk_timeout {
                 msg!("AFK timeout not passed.");
                 return Err(FightingError::StillInGame.into());
-            }
-            else {
+            } else {
                 msg!("AFK timeout passed.");
                 user_info.in_game = false;
                 return Ok(());
@@ -128,7 +127,33 @@ pub mod fighting {
     }
 
     /// User finalize the game. Fee payer: GGWP system account.
-    pub fn finalize_game(ctx: Context<FinalizeGame>) -> Result<()> {
+    pub fn finalize_game(
+        ctx: Context<FinalizeGame>,
+        game_id: u64,
+        game_result: GameResult,
+        actions_log: Vec<IdentityAction>,
+    ) -> Result<()> {
+        let user_info = &mut ctx.accounts.user_info;
+        let game_info = &mut ctx.accounts.game_info;
+
+        // Save results (validated on backend)
+        game_info.id = game_id;
+        game_info.result = game_result;
+        game_info.actions_log = actions_log;
+
+        if game_result == GameResult::Win {
+            /* TODO:
+            =Play-to-earn fund / (количество игроков с активно замороженными токенами GGWP*20000).
+            + Добавить логическое условие
+            Если награда превышает объем GPASS сминченных в проекте в целом за последние сутки (GPASS Daily reward), то
+            НАГРАДА = GPASS Daily reward/10
+            С победы списывается Royal​​ty 8% удерживаются в пользу  Accumulative fund.
+            */
+        }
+
+        // Set up user status
+        user_info.in_game = false;
+
         Ok(())
     }
 }
