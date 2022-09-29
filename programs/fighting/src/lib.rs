@@ -1,6 +1,6 @@
 use crate::context::*;
 use crate::error::FightingError;
-use crate::state::{GameResult, IdentityAction, GPASS_BURN_AUTH_SEED};
+use crate::state::{GameResult, IdentityAction, ACTIONS_VEC_MAX, GPASS_BURN_AUTH_SEED};
 use anchor_lang::prelude::*;
 
 mod context;
@@ -135,6 +135,12 @@ pub mod fighting {
     ) -> Result<()> {
         let user_info = &mut ctx.accounts.user_info;
         let game_info = &mut ctx.accounts.game_info;
+
+        require_eq!(user_info.in_game, true, FightingError::UserNotInGame);
+        require_neq!(actions_log.len(), 0, FightingError::InvalidActionsLogSize);
+        if actions_log.len() > ACTIONS_VEC_MAX {
+            return Err(FightingError::InvalidActionsLogSize.into());
+        }
 
         // Save results (validated on backend)
         game_info.id = game_id;

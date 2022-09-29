@@ -169,11 +169,10 @@ pub struct IdentityAction {
     pub action: Action,
 }
 
-const PLAYER_ACTIONS_MAX: usize = 3 * 9;
-const PLAYER_IDENTITIES_MAX: usize = 3 * 9;
 const PLAYERS_MAX: usize = 2;
-pub const ACTIONS_LEN_MAX: usize =
-    (PLAYER_ACTIONS_MAX * Action::LEN + PLAYER_IDENTITIES_MAX * Identity::LEN) * PLAYERS_MAX;
+const PLAYER_ACTIONS_MAX: usize = 3 * 9;
+pub const ACTIONS_VEC_MAX: usize = PLAYER_ACTIONS_MAX * PLAYERS_MAX;
+const ACTIONS_VEC_LEN_MAX: usize = (Action::LEN + Identity::LEN) * ACTIONS_VEC_MAX;
 
 #[account]
 #[derive(Default, Debug)]
@@ -184,5 +183,5 @@ pub struct GameInfo {
 }
 
 impl GameInfo {
-    pub const LEN: usize = DESCRIMINATOR_LEN + 8 + GameResult::LEN + ACTIONS_LEN_MAX;
+    pub const LEN: usize = DESCRIMINATOR_LEN + 8 + GameResult::LEN + ACTIONS_VEC_LEN_MAX;
 }

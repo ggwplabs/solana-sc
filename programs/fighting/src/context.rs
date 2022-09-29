@@ -98,7 +98,7 @@ pub struct FinalizeGame<'info> {
     )]
     pub game_info: Box<Account<'info, GameInfo>>,
 
-    #[account(
+    #[account(mut,
         seeds = [
             USER_INFO_SEED.as_bytes(),
             fighting_settings.key().as_ref(),

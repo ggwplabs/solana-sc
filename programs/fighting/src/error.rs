@@ -19,4 +19,8 @@ pub enum FightingError {
     NotEnoughGpass, // 6003
     #[msg("Still in game")]
     StillInGame, // 6004
+    #[msg("User not in game")]
+    UserNotInGame, // 6005
+    #[msg("Invalid actions log size")]
+    InvalidActionsLogSize, // 6006
 }
