@@ -246,10 +246,12 @@ describe("Fighting functional tests", () => {
   });
 
   it("Finalize game", async () => {
+    let validatorBalanceBefore = await fighting.provider.connection.getBalance(fixture.admin.publicKey);
+
     let actions = [
       { who: { player: {} }, action: { armShort: {} } },
       { who: { bot: {} }, action: { legShort: {} } },
-      { who: { player: {} }, action: { legLong: {} } }
+      { who: { player: {} }, action: { legLong: {} } },
     ];
     await fighting.methods.finalizeGame(new anchor.BN(gameId), { win: {} }, actions)
       .accounts({
@@ -272,5 +274,9 @@ describe("Fighting functional tests", () => {
     assert.equal(gameInfoData.id.toNumber(), gameId);
     assert.ok(gameInfoData.result["win"] !== undefined);
     assert.deepStrictEqual(gameInfoData.actionsLog, actions);
+
+    let validatorBalance = await fighting.provider.connection.getBalance(fixture.admin.publicKey);
+    console.log("Actions log write cost: ", validatorBalanceBefore - validatorBalance);
+    console.log("Actions log write cost: ", utils.amountToUiAmount(validatorBalanceBefore - validatorBalance, 9));
   });
 });

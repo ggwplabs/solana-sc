@@ -90,3 +90,7 @@ export async function getTokenBalance(wallet: PublicKey): Promise<number> {
 export function calcRoyaltyAmount(amount: number, royalty: number): number {
     return amount / 100 * royalty;
 }
+
+export function amountToUiAmount(amount: number, decimals: number): number {
+    return amount / (10 ** decimals);
+}
