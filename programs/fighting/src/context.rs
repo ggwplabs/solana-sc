@@ -1,5 +1,5 @@
 use crate::state::{
-    Action, FightingSettings, GameInfo, GameResult, Identity, UserInfo, GAME_INFO_SEED,
+    Action, FightingSettings, GameInfo, GameResult, Identity, UserFightingInfo, GAME_INFO_SEED,
     GPASS_BURN_AUTH_SEED, USER_INFO_SEED,
 };
 use anchor_lang::prelude::*;
@@ -40,7 +40,7 @@ pub struct UpdateSetting<'info> {
 pub struct StartGame<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(init_if_needed, payer = user, space = UserInfo::LEN,
+    #[account(init_if_needed, payer = user, space = UserFightingInfo::LEN,
         seeds = [
             USER_INFO_SEED.as_bytes(),
             fighting_settings.key().as_ref(),
@@ -48,7 +48,7 @@ pub struct StartGame<'info> {
         ],
         bump
     )]
-    pub user_info: Box<Account<'info, UserInfo>>,
+    pub user_info: Box<Account<'info, UserFightingInfo>>,
 
     pub fighting_settings: Box<Account<'info, FightingSettings>>,
 
@@ -106,7 +106,7 @@ pub struct FinalizeGame<'info> {
         ],
         bump
     )]
-    pub user_info: Box<Account<'info, UserInfo>>,
+    pub user_info: Box<Account<'info, UserFightingInfo>>,
 
     pub fighting_settings: Box<Account<'info, FightingSettings>>,
 

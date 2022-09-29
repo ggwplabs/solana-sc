@@ -59,7 +59,7 @@ pub mod fighting {
     }
 
     /// Update auth can set the new AFK timeout in sec value.
-    pub fn update_afk_timeout_set(ctx: Context<UpdateSetting>, afk_timeout: i64) -> Result<()> {
+    pub fn update_afk_timeout(ctx: Context<UpdateSetting>, afk_timeout: i64) -> Result<()> {
         let fighting_settings = &mut ctx.accounts.fighting_settings;
         require_keys_eq!(
             ctx.accounts.authority.key(),

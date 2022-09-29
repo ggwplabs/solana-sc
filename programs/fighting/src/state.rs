@@ -27,12 +27,12 @@ impl FightingSettings {
 
 #[account]
 #[derive(Default, Debug)]
-pub struct UserInfo {
+pub struct UserFightingInfo {
     pub in_game: bool,
     pub in_game_time: i64,
 }
 
-impl UserInfo {
+impl UserFightingInfo {
     pub const LEN: usize = DESCRIMINATOR_LEN +
         1 + // in game status
         8 // in game time
