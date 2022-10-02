@@ -1,7 +1,8 @@
 //! CLI Client for interacting with the smart contracts
 use crate::commands::{
     common::get_common_commands, distribution::get_distribution_commands,
-    freezing::get_freezing_commands, staking::get_staking_commands,
+    fighting::get_fighting_commands, freezing::get_freezing_commands,
+    staking::get_staking_commands,
 };
 use anchor_client::{
     solana_sdk::{
@@ -25,6 +26,7 @@ fn main() {
     let app = app.subcommand(get_staking_commands());
     let app = app.subcommand(get_distribution_commands());
     let app = app.subcommand(get_common_commands());
+    let app = app.subcommand(get_fighting_commands());
     let app_matches = app.get_matches();
 
     let config = if let Some(config_path) = app_matches.value_of("config") {
@@ -103,6 +105,17 @@ fn main() {
             )
             .expect("Common handler error");
         }
+
+        (commands::CMDS_FIGHTING, Some(cmd_matches)) => {
+            handlers::fighting::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.fighting)
+                    .expect("Error in parsing fighting program id"),
+            )
+            .expect("Fighting handler error");
+        }
+
         _ => {
             println!("{}", app_matches.usage());
         }
