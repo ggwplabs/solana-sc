@@ -5,6 +5,7 @@
         "gpass": "<Pubkey>",
         "freezing": "<Pubkey>",
         "staking": "<Pubkey>",
-        "distribution": "<Pubkey>"
+        "distribution": "<Pubkey>",
+        "fighting": "<Pubkey>"
     }
 }

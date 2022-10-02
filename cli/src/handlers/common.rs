@@ -10,6 +10,7 @@ use anchor_client::{ClientError, Cluster};
 use clap::value_t_or_exit;
 use clap::{ArgMatches, Error};
 use distribution::state::DistributionInfo;
+use fighting::state::{FightingSettings, GPASS_BURN_AUTH_SEED};
 use freezing::state::{FreezingInfo, RewardTableRow, GPASS_MINT_AUTH_SEED};
 use gpass::state::GpassInfo;
 use spl_token::amount_to_ui_amount;
@@ -24,11 +25,13 @@ pub fn handle(
     freezing_program_id: Pubkey,
     staking_program_id: Pubkey,
     distribution_program_id: Pubkey,
+    figting_program_id: Pubkey,
 ) -> Result<(), Error> {
     let gpass_program = client.program(gpass_program_id);
     let freezing_program = client.program(freezing_program_id);
     let staking_program = client.program(staking_program_id);
     let distribution_program = client.program(distribution_program_id);
+    let fighting_program = client.program(figting_program_id);
 
     let params = ProgramsParams::get_by_cluster(cluster);
     println!("Cluster: {}", cluster.url());
@@ -46,6 +49,7 @@ pub fn handle(
                 freezing_program,
                 staking_program,
                 distribution_program,
+                fighting_program,
                 params,
                 update_auth,
                 ggwp_token,
@@ -67,6 +71,7 @@ pub fn cmd_init_all(
     freezing_program: Program,
     staking_program: Program,
     distribution_program: Program,
+    fighting_program: Program,
     params: ProgramsParams,
     update_auth: Pubkey,
     ggwp_token: Pubkey,
@@ -77,11 +82,13 @@ pub fn cmd_init_all(
     assert_eq!(freezing::id(), freezing_program.id());
     assert_eq!(staking::id(), staking_program.id());
     assert_eq!(distribution::id(), distribution_program.id());
+    assert_eq!(fighting::id(), fighting_program.id());
 
     let admin_pk = gpass_program.payer();
     assert_eq!(admin_pk, freezing_program.payer());
     assert_eq!(admin_pk, staking_program.payer());
     assert_eq!(admin_pk, distribution_program.payer());
+    assert_eq!(admin_pk, fighting_program.payer());
 
     println!("Admin PK: {}", admin_pk);
     println!("Update authority: {}", update_auth);
@@ -100,11 +107,13 @@ pub fn cmd_init_all(
     let freezing_info = Keypair::new();
     let staking_info = Keypair::new();
     let distribution_info = Keypair::new();
+    let fighting_settings = Keypair::new();
 
     println!("New GPASS info PK: {}", gpass_info.pubkey());
     println!("New freezing info PK: {}", freezing_info.pubkey());
     println!("New staking info PK: {}", staking_info.pubkey());
     println!("New distribution info PK: {}", distribution_info.pubkey());
+    println!("New fighting settings PK: {}", fighting_settings.pubkey());
     println!();
 
     // Generate pks for authorities
@@ -117,6 +126,16 @@ pub fn cmd_init_all(
         &freezing_program.id(),
     );
     println!("Freezing GPASS mint auth: {}", freezing_gpass_mint_auth);
+
+    let (fighting_gpass_burn_auth, _) = Pubkey::find_program_address(
+        &[
+            GPASS_BURN_AUTH_SEED.as_bytes(),
+            fighting_settings.pubkey().as_ref(),
+            gpass_info.pubkey().as_ref(),
+        ],
+        &fighting_program.id(),
+    );
+    println!("Fighting GPASS burn auth: {}", freezing_gpass_mint_auth);
 
     let (freezing_treasury_auth, _) = Pubkey::find_program_address(
         &[
@@ -225,7 +244,7 @@ pub fn cmd_init_all(
             burn_period: params.gpass.burn_period,
             update_auth: update_auth,
             minters: vec![freezing_gpass_mint_auth],
-            burners: vec![],
+            burners: vec![fighting_gpass_burn_auth],
         })
         .signer(&gpass_info)
         .send()?;
@@ -313,6 +332,25 @@ pub fn cmd_init_all(
     let staking_info_data: StakingInfo = staking_program.account(staking_info.pubkey())?;
     println!("Staking info initialized: {:?}", staking_info_data);
 
+    fighting_program
+        .request()
+        .accounts(fighting::accounts::Initialize {
+            admin: admin_pk,
+            fighting_settings: fighting_settings.pubkey(),
+            gpass_burn_auth: fighting_gpass_burn_auth,
+            gpass_info: gpass_info.pubkey(),
+            system_program: system_program::ID,
+        })
+        .args(fighting::instruction::Initialize {
+            update_auth: update_auth,
+            afk_timeout: params.fighting.afk_timeout,
+        })
+        .signer(&fighting_settings)
+        .send()?;
+    let fighting_settings_data: FightingSettings =
+        fighting_program.account(fighting_settings.pubkey())?;
+    println!("Fighting settings: {:?}", fighting_settings_data);
+
     println!();
 
     // Calc balance diff
@@ -331,6 +369,7 @@ pub struct ProgramsParams {
     pub gpass: GPASSParams,
     pub freezing: FreezingParams,
     pub staking: StakingParams,
+    pub fighting: FightingParams,
 }
 
 #[derive(Debug)]
@@ -366,6 +405,11 @@ pub struct StakingParams {
     pub apr_end: u8,
 }
 
+#[derive(Debug)]
+pub struct FightingParams {
+    pub afk_timeout: i64,
+}
+
 impl ProgramsParams {
     pub fn get_by_cluster(cluster: &Cluster) -> Self {
         match cluster {
@@ -395,6 +439,9 @@ impl ProgramsParams {
                     apr_step: 1,
                     apr_end: 5,
                 },
+                fighting: FightingParams {
+                    afk_timeout: 1 * 60 * 60,
+                },
             },
             Cluster::Testnet => ProgramsParams {
                 distribution: DistributionParams {
@@ -422,6 +469,9 @@ impl ProgramsParams {
                     apr_step: 1,
                     apr_end: 5,
                 },
+                fighting: FightingParams {
+                    afk_timeout: 1 * 60 * 60,
+                },
             },
             Cluster::Mainnet => ProgramsParams {
                 distribution: DistributionParams {
@@ -448,6 +498,9 @@ impl ProgramsParams {
                     apr_start: 45,
                     apr_step: 1,
                     apr_end: 5,
+                },
+                fighting: FightingParams {
+                    afk_timeout: 1 * 60 * 60,
                 },
             },
             _ => panic!("Bad cluster"),
