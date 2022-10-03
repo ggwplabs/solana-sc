@@ -26,6 +26,14 @@ pub fn get_fighting_commands<'a, 'b>() -> App<'a, 'b> {
                         .help("The fighting info update authority pubkey."),
                 )
                 .arg(
+                    Arg::with_name("gpass_info")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The GPASS info pubkey."),
+                )
+                .arg(
                     Arg::with_name("afk_timeout")
                         .value_name("i64")
                         .required(true)
