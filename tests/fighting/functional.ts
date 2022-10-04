@@ -132,7 +132,7 @@ describe("Fighting functional tests", () => {
   });
 
   it("User try to restart the game after afk timeout", async () => {
-    await utils.sleep(afkTimeout);
+    await utils.sleep(afkTimeout * 2);
     await fighting.methods.startGame()
       .accounts({
         user: fixture.user.kp.publicKey,

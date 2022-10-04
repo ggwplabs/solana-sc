@@ -60,6 +60,9 @@ describe("Freezing authority tests", () => {
     assert.ok(freezingInfoData.accumulativeFund.equals(fixture.freezing.accumulativeFund));
     assert.ok(freezingInfoData.treasury.equals(fixture.freezing.treasury));
     assert.equal(freezingInfoData.totalFreezed.toNumber(), 0);
+    assert.equal(freezingInfoData.currentUsersFreezed.toNumber(), 0);
+    assert.equal(freezingInfoData.dailyFreezed.toNumber(), 0);
+    assert.notEqual(freezingInfoData.dailyFreezedLastReset.toNumber(), 0);
     assert.equal(freezingInfoData.rewardPeriod.toNumber(), rewardPeriod);
     assert.equal(freezingInfoData.royalty, royalty);
     assert.equal(freezingInfoData.unfreezeRoyalty, unfreezeRoyalty);
