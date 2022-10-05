@@ -2642,6 +2642,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "reward-distribution"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+]
+
+[[package]]
 name = "ring"
 version = "0.16.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"

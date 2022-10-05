@@ -6,6 +6,7 @@ gpass = "Gv9WAng6iPymaDwXMQrbsh2uTkDpAPTB89Ld4ctJejMG"
 freezing = "ABHUowgjyTkmbMRRuMYJ5ui4wAz6Z6HE4PQMHy9YqMrQ"
 staking = "ELRFw9awBQFuvvxnf3R1Xaihdy6ypWY7sH6nTNXh8EX1"
 distribution = "79GShMQgEBcfpiiwkBxv3yBxHqCN8J2E8DhivatqpfYC"
+reward_distribution = "5ihGT7nkjxfo1M43NZrPbbDBG4Js215ftJp6uksnNCEP"
 fighting = "F23aPzza8PQyFmBwPT7eKv3oabEoBwa5aSFAHwYSfam6"
 
 [registry]
