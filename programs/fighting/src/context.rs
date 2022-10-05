@@ -3,6 +3,8 @@ use crate::state::{
     GPASS_BURN_AUTH_SEED, USER_INFO_SEED,
 };
 use anchor_lang::prelude::*;
+use anchor_spl::token::TokenAccount;
+use freezing::state::FreezingInfo;
 use gpass::state::{GpassInfo, Wallet};
 
 #[derive(Accounts)]
@@ -109,6 +111,11 @@ pub struct FinalizeGame<'info> {
     pub user_info: Box<Account<'info, UserFightingInfo>>,
 
     pub fighting_settings: Box<Account<'info, FightingSettings>>,
+    pub freezing_info: Box<Account<'info, FreezingInfo>>,
+
+    #[account(mut)] // TODO: check address?
+    pub play_to_earn_fund: Box<Account<'info, TokenAccount>>,
+
 
     // Misc.
     pub system_program: Program<'info, System>,

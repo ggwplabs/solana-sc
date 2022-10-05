@@ -13,14 +13,16 @@ pub enum FightingError {
     // Constraints
     #[msg("Invalid AFK timeout in sec")]
     InvalidAFKTimeout, // 6002
+    #[msg("Invalid royalty value")]
+    InvalidRoyaltyValue, // 6003
 
     // Functional errors
     #[msg("Not enough gpass for game")]
-    NotEnoughGpass, // 6003
+    NotEnoughGpass, // 6004
     #[msg("Still in game")]
-    StillInGame, // 6004
+    StillInGame, // 6005
     #[msg("User not in game")]
-    UserNotInGame, // 6005
+    UserNotInGame, // 6006
     #[msg("Invalid actions log size")]
-    InvalidActionsLogSize, // 6006
+    InvalidActionsLogSize, // 6007
 }

@@ -14,6 +14,9 @@ pub struct FightingSettings {
     pub update_auth: Pubkey,
 
     pub afk_timeout: i64,
+    pub gpass_daily_reward_coefficient: u32,
+    pub reward_coefficient: u32,
+    pub royalty: u8,
     pub gpass_burn_auth_bump: u8,
 }
 
@@ -22,6 +25,9 @@ impl FightingSettings {
         32 + // admin pk
         32 + // update auth pk
         8 + // AFK timeout
+        4 + // gpass daily reward coefficient
+        4 + // reward coefficient
+        1 + // royalty
         1; // gpass burn auth bump
 }
 

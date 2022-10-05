@@ -6,6 +6,7 @@ use anchor_lang::prelude::*;
 mod context;
 mod error;
 pub mod state;
+mod utils;
 
 declare_id!("F23aPzza8PQyFmBwPT7eKv3oabEoBwa5aSFAHwYSfam6");
 
@@ -18,6 +19,9 @@ pub mod fighting {
         ctx: Context<Initialize>,
         update_auth: Pubkey,
         afk_timeout: i64,
+        reward_coefficient: u32,
+        gpass_daily_reward_coefficient: u32,
+        royalty: u8,
     ) -> Result<()> {
         require!(afk_timeout > 0, FightingError::InvalidAFKTimeout);
 
@@ -25,6 +29,9 @@ pub mod fighting {
         fighting_settings.admin = ctx.accounts.admin.key();
         fighting_settings.update_auth = update_auth;
         fighting_settings.afk_timeout = afk_timeout;
+        fighting_settings.reward_coefficient = reward_coefficient;
+        fighting_settings.gpass_daily_reward_coefficient = gpass_daily_reward_coefficient;
+        fighting_settings.royalty = royalty;
         fighting_settings.gpass_burn_auth_bump = ctx.bumps["gpass_burn_auth"];
 
         Ok(())
@@ -67,7 +74,59 @@ pub mod fighting {
             FightingError::AccessDenied
         );
 
+        require!(afk_timeout > 0, FightingError::InvalidAFKTimeout);
+
         fighting_settings.afk_timeout = afk_timeout;
+
+        Ok(())
+    }
+
+    /// Update auth can set the new reward coefficient value.
+    pub fn update_reward_coefficient(
+        ctx: Context<UpdateSetting>,
+        reward_coefficient: u32,
+    ) -> Result<()> {
+        let fighting_settings = &mut ctx.accounts.fighting_settings;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            fighting_settings.update_auth,
+            FightingError::AccessDenied
+        );
+
+        fighting_settings.reward_coefficient = reward_coefficient;
+
+        Ok(())
+    }
+
+    /// Update auth can set the new gpass daily reward coefficient value.
+    pub fn update_gpass_daily_reward_coefficient(
+        ctx: Context<UpdateSetting>,
+        gpass_daily_reward_coefficient: u32,
+    ) -> Result<()> {
+        let fighting_settings = &mut ctx.accounts.fighting_settings;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            fighting_settings.update_auth,
+            FightingError::AccessDenied
+        );
+
+        fighting_settings.gpass_daily_reward_coefficient = gpass_daily_reward_coefficient;
+
+        Ok(())
+    }
+
+    /// Update auth can set the new royalty in percent value.
+    pub fn update_royalty(ctx: Context<UpdateSetting>, royalty: u8) -> Result<()> {
+        let fighting_settings = &mut ctx.accounts.fighting_settings;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            fighting_settings.update_auth,
+            FightingError::AccessDenied
+        );
+
+        require!(royalty > 0, FightingError::InvalidRoyaltyValue);
+
+        fighting_settings.royalty = royalty;
 
         Ok(())
     }
@@ -133,8 +192,11 @@ pub mod fighting {
         game_result: GameResult,
         actions_log: Vec<IdentityAction>,
     ) -> Result<()> {
+        let fighting_settings = &ctx.accounts.fighting_settings;
         let user_info = &mut ctx.accounts.user_info;
         let game_info = &mut ctx.accounts.game_info;
+        let play_to_earn_fund = &ctx.accounts.play_to_earn_fund;
+        let freezing_info = &ctx.accounts.freezing_info;
 
         require_eq!(user_info.in_game, true, FightingError::UserNotInGame);
         require_neq!(actions_log.len(), 0, FightingError::InvalidActionsLogSize);
@@ -148,13 +210,19 @@ pub mod fighting {
         game_info.actions_log = actions_log;
 
         if game_result == GameResult::Win {
-            /* TODO:
-            =Play-to-earn fund / (количество игроков с активно замороженными токенами GGWP*20000).
-            + Добавить логическое условие
-            Если награда превышает объем GPASS сминченных в проекте в целом за последние сутки (GPASS Daily reward), то
-            НАГРАДА = GPASS Daily reward/10
-            С победы списывается Royal​​ty 8% удерживаются в пользу  Accumulative fund.
-            */
+            let reward_amount = utils::calc_reward_amount(
+                play_to_earn_fund.amount,
+                freezing_info.current_users_freezed,
+                fighting_settings.reward_coefficient,
+                freezing_info.daily_gpass_reward,
+                fighting_settings.gpass_daily_reward_coefficient,
+            )?;
+            if reward_amount > 0 {
+                let royalty_amount =
+                    utils::calc_share_amount(fighting_settings.royalty, reward_amount)?;
+                // TODO: transfer reward_amount to user
+                // TODO: transfer royalty_amount to accumulative fund
+            }
         }
 
         // Set up user status
