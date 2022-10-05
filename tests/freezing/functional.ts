@@ -89,7 +89,7 @@ describe("Freezing functional tests", () => {
     const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
     assert.ok(utils.assertWithPrecission(freezingInfoData.totalFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     assert.equal(freezingInfoData.currentUsersFreezed.toNumber(), 1);
-    assert.ok(utils.assertWithPrecission(freezingInfoData.dailyFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1))
+    assert.equal(freezingInfoData.dailyGpassReward.toNumber(), 5);
     const gpassInfoData = await gpassProgram.account.gpassInfo.fetch(fixture.freezing.gpassInfo.publicKey);
     assert.equal(gpassInfoData.totalAmount.toNumber(), 5);
   });
@@ -116,7 +116,7 @@ describe("Freezing functional tests", () => {
     const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
     assert.ok(utils.assertWithPrecission(freezingInfoData.totalFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1));
     assert.equal(freezingInfoData.currentUsersFreezed.toNumber(), 1);
-    assert.ok(utils.assertWithPrecission(freezingInfoData.dailyFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1))
+    assert.equal(freezingInfoData.dailyGpassReward.toNumber(), gpassAmountBefore + 10);
   });
 
   it("User wait burn period and withdraw GPASS reward", async () => {
@@ -170,7 +170,7 @@ describe("Freezing functional tests", () => {
     const freezingInfoData = await freezingProgram.account.freezingInfo.fetch(fixture.freezing.info.publicKey);
     assert.equal(freezingInfoData.totalFreezed.toNumber(), 0);
     assert.equal(freezingInfoData.currentUsersFreezed.toNumber(), 0);
-    assert.ok(utils.assertWithPrecission(freezingInfoData.dailyFreezed.toNumber(), userFreezeAmount - utils.calcRoyaltyAmount(userFreezeAmount, royalty), 1))
+    assert.equal(freezingInfoData.dailyGpassReward.toNumber(), 35);
     const gpassInfoData = await gpassProgram.account.gpassInfo.fetch(fixture.freezing.gpassInfo.publicKey);
     assert.equal(gpassInfoData.totalAmount.toNumber(), 20);
   });

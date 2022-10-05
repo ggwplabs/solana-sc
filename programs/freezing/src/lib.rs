@@ -56,8 +56,8 @@ pub mod freezing {
 
         freezing_info.total_freezed = 0;
         freezing_info.current_users_freezed = 0;
-        freezing_info.daily_freezed = 0;
-        freezing_info.daily_freezed_last_reset = clock.unix_timestamp;
+        freezing_info.daily_gpass_reward = 0;
+        freezing_info.daily_gpass_reward_last_reset = clock.unix_timestamp;
         freezing_info.reward_period = reward_period;
         freezing_info.royalty = royalty;
         freezing_info.unfreeze_royalty = unfreeze_royalty;
@@ -229,7 +229,24 @@ pub mod freezing {
         let gpass_earned =
             utils::earned_gpass_immediately(&freezing_info.reward_table, freezed_amount)?;
         msg!("Earned GPASS immediately: {}", gpass_earned);
+
+        // Try to reset gpass daily reward
+        let spent_time = clock
+            .unix_timestamp
+            .checked_sub(freezing_info.daily_gpass_reward_last_reset)
+            .ok_or(FreezingError::Overflow)?;
+        if spent_time >= 24 * 60 * 60 {
+            freezing_info.daily_gpass_reward = 0;
+            freezing_info.daily_gpass_reward_last_reset = clock.unix_timestamp;
+        }
+
         if gpass_earned > 0 {
+            // Update gpass daily reward
+            freezing_info.daily_gpass_reward = freezing_info
+                .daily_gpass_reward
+                .checked_add(gpass_earned)
+                .ok_or(FreezingError::Overflow)?;
+
             user_info.last_getting_gpass = clock.unix_timestamp;
             // Mint GPASS tokens to user
             let seeds = &[
@@ -288,20 +305,6 @@ pub mod freezing {
             .checked_add(1)
             .ok_or(FreezingError::Overflow)?;
 
-        let spent_time = clock
-            .unix_timestamp
-            .checked_sub(freezing_info.daily_freezed_last_reset)
-            .ok_or(FreezingError::Overflow)?;
-        if spent_time >= 24 * 60 * 60 {
-            freezing_info.daily_freezed = 0;
-            freezing_info.daily_freezed_last_reset = clock.unix_timestamp;
-        }
-
-        freezing_info.daily_freezed = freezing_info
-            .daily_freezed
-            .checked_add(freezed_amount)
-            .ok_or(FreezingError::Overflow)?;
-
         user_info.freezed_amount = freezed_amount;
         user_info.freezed_time = clock.unix_timestamp;
 
@@ -332,6 +335,22 @@ pub mod freezing {
             return Err(FreezingError::ZeroGpassEarned.into());
         }
 
+        // Try to reset gpass daily reward
+        let spent_time = clock
+            .unix_timestamp
+            .checked_sub(freezing_info.daily_gpass_reward_last_reset)
+            .ok_or(FreezingError::Overflow)?;
+        if spent_time >= 24 * 60 * 60 {
+            freezing_info.daily_gpass_reward = 0;
+            freezing_info.daily_gpass_reward_last_reset = clock.unix_timestamp;
+        }
+
+        // Update gpass daily reward
+        freezing_info.daily_gpass_reward = freezing_info
+            .daily_gpass_reward
+            .checked_add(gpass_earned)
+            .ok_or(FreezingError::Overflow)?;
+
         msg!("Earned GPASS: {}", gpass_earned);
         user_info.last_getting_gpass = clock.unix_timestamp;
         // Mint GPASS to user
@@ -354,15 +373,6 @@ pub mod freezing {
             ),
             gpass_earned,
         )?;
-
-        let spent_time = clock
-            .unix_timestamp
-            .checked_sub(freezing_info.daily_freezed_last_reset)
-            .ok_or(FreezingError::Overflow)?;
-        if spent_time >= 24 * 60 * 60 {
-            freezing_info.daily_freezed = 0;
-            freezing_info.daily_freezed_last_reset = clock.unix_timestamp;
-        }
 
         Ok(())
     }
@@ -397,7 +407,24 @@ pub mod freezing {
             freezing_info.reward_period,
         )?;
         msg!("Earned GPASS: {}", gpass_earned);
+
+        // Try to reset gpass daily reward
+        let spent_time = clock
+            .unix_timestamp
+            .checked_sub(freezing_info.daily_gpass_reward_last_reset)
+            .ok_or(FreezingError::Overflow)?;
+        if spent_time >= 24 * 60 * 60 {
+            freezing_info.daily_gpass_reward = 0;
+            freezing_info.daily_gpass_reward_last_reset = clock.unix_timestamp;
+        }
+
         if gpass_earned > 0 {
+            // Update gpass daily reward
+            freezing_info.daily_gpass_reward = freezing_info
+                .daily_gpass_reward
+                .checked_add(gpass_earned)
+                .ok_or(FreezingError::Overflow)?;
+
             user_info.last_getting_gpass = clock.unix_timestamp;
             // Mint GPASS tokens to user
             let seeds = &[
@@ -477,15 +504,6 @@ pub mod freezing {
             ),
             amount,
         )?;
-
-        let spent_time = clock
-            .unix_timestamp
-            .checked_sub(freezing_info.daily_freezed_last_reset)
-            .ok_or(FreezingError::Overflow)?;
-        if spent_time >= 24 * 60 * 60 {
-            freezing_info.daily_freezed = 0;
-            freezing_info.daily_freezed_last_reset = clock.unix_timestamp;
-        }
 
         freezing_info.current_users_freezed = freezing_info
             .current_users_freezed

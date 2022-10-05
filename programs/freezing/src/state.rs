@@ -28,8 +28,8 @@ pub struct FreezingInfo {
 
     pub total_freezed: u64,
     pub current_users_freezed: u64,
-    pub daily_freezed: u64,
-    pub daily_freezed_last_reset: i64,
+    pub daily_gpass_reward: u64,
+    pub daily_gpass_reward_last_reset: i64,
     pub reward_period: i64,
     pub royalty: u8,
     pub unfreeze_royalty: u8,
