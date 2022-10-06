@@ -13,6 +13,7 @@ export const USER_WALLET_SEED = "user_gpass_wallet";
 export const ACCUMULATIVE_FUND_AUTH_SEED = "accumulative_fund_auth";
 export const GPASS_BURN_AUTH_SEED = "gpass_burn_auth";
 export const GAME_INFO_SEED = "game_info";
+export const PLAY_TO_EARN_FUND_AUTH_SEED = "play_to_earn_fund_auth";
 
 export async function airdropSol(conn: Connection, to: PublicKey, amount: number) {
     const airdropSignature = await conn.requestAirdrop(to, amount);

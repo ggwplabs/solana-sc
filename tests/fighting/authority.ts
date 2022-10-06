@@ -223,7 +223,7 @@ describe("Fighting authority tests", () => {
     );
   });
 
-  it("update gpass daily reward coefficient", async () => {
+  it("update royalty", async () => {
     const newRoyalty = 87;
     await fighting.methods.updateRoyalty(newRoyalty)
       .accounts({

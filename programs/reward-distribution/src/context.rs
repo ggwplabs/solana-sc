@@ -23,7 +23,7 @@ pub struct Initialize<'info> {
     #[account(
         constraint = play_to_earn_fund.mint == ggwp_token.key()
         @RewardDistributionError::InvalidPlayToEarnFundMint,
-        constraint = play_to_earn_fund.owner == play_to_earn_fund.key()
+        constraint = play_to_earn_fund.owner == play_to_earn_fund_auth.key()
         @RewardDistributionError::InvalidPlayToEarnFundOwner,
     )]
     pub play_to_earn_fund: Box<Account<'info, TokenAccount>>,
