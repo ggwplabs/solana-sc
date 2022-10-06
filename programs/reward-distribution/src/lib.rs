@@ -1,6 +1,6 @@
 use crate::context::*;
 use crate::error::RewardDistributionError;
-use crate::state::MAX_TRANSFER_AUTH_LIST;
+use crate::state::{MAX_TRANSFER_AUTH_LIST, PLAY_TO_EARN_FUND_AUTH_SEED};
 use anchor_lang::prelude::*;
 
 mod context;
@@ -80,6 +80,44 @@ pub mod reward_distribution {
         );
 
         reward_distribution_info.transfer_auth_list = transfer_auth_list;
+
+        Ok(())
+    }
+
+    pub fn transfer(ctx: Context<Transfer>, amount: u64) -> Result<()> {
+        let reward_distribution_info = &ctx.accounts.reward_distribution_info;
+        let authority = &ctx.accounts.authority;
+        let play_to_earn_fund = &ctx.accounts.play_to_earn_fund;
+        let play_to_earn_fund_auth = &ctx.accounts.play_to_earn_fund_auth;
+        let to = &ctx.accounts.to;
+        let token_program = &ctx.accounts.token_program;
+
+        if !reward_distribution_info
+            .transfer_auth_list
+            .contains(authority.key)
+        {
+            msg!("Invalid transfer authority");
+            return Err(RewardDistributionError::InvalidTransferAuthority.into());
+        }
+
+        let seeds = &[
+            PLAY_TO_EARN_FUND_AUTH_SEED.as_bytes(),
+            reward_distribution_info.to_account_info().key.as_ref(),
+            &[reward_distribution_info.play_to_earn_fund_auth_bump],
+        ];
+        let signer = &[&seeds[..]];
+        anchor_spl::token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                anchor_spl::token::Transfer {
+                    authority: play_to_earn_fund_auth.to_account_info(),
+                    from: play_to_earn_fund.to_account_info(),
+                    to: to.to_account_info(),
+                },
+                signer,
+            ),
+            amount,
+        )?;
 
         Ok(())
     }

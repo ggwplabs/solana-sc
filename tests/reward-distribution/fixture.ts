@@ -17,14 +17,21 @@ export class RewardDistributionTestFixture {
   }
 
   transferAuth: Keypair;
+
+  user: {
+    kp: Keypair;
+    ggwpWallet: PublicKey;
+  }
 }
 
 export async function prepareRewardDistributionTestFixture(program: Program<RewardDistribution>): Promise<RewardDistributionTestFixture> {
   const admin = Keypair.generate();
   const updateAuth = Keypair.generate();
+  const user = Keypair.generate();
 
   await utils.airdropSol(program.provider.connection, admin.publicKey, 200_000_000_000);
   await utils.airdropSol(program.provider.connection, updateAuth.publicKey, 200_000_000_000);
+  await utils.airdropSol(program.provider.connection, user.publicKey, 200_000_000_000);
 
   const rewardDistributionInfo = Keypair.generate();
   const playToEarnFundAuth = findProgramAddressSync(
@@ -40,6 +47,7 @@ export async function prepareRewardDistributionTestFixture(program: Program<Rewa
   const ggwpToken = await utils.createMint(admin.publicKey, 9);
   const playToEarnFund = await utils.createTokenWallet(ggwpToken, playToEarnFundAuth);
   await utils.mintTokens(ggwpToken, admin, playToEarnFund, 100_000_000_000);
+  const userGGWPwallet = await utils.createTokenWallet(ggwpToken, user.publicKey);
 
   return {
     admin: admin,
@@ -53,5 +61,10 @@ export async function prepareRewardDistributionTestFixture(program: Program<Rewa
     },
 
     transferAuth: transferAuth,
+
+    user: {
+      kp: user,
+      ggwpWallet: userGGWPwallet,
+    }
   }
 }

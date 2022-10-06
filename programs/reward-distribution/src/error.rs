@@ -19,4 +19,6 @@ pub enum RewardDistributionError {
     InvalidTransferAuthList, // 6004
 
     // Reward distribution errors
+    #[msg("Invalid transfer authority")]
+    InvalidTransferAuthority, // 6005
 }
