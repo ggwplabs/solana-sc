@@ -7,6 +7,7 @@ import {
 } from "@solana/web3.js";
 import { Fighting } from "../../target/types/fighting";
 import { Gpass } from "../../target/types/gpass";
+import { RewardDistribution } from "../../target/types/reward_distribution";
 import * as utils from "../utils";
 
 export class FightingTestFixture {
@@ -16,9 +17,13 @@ export class FightingTestFixture {
   fighting: {
     settings: Keypair;
     gpassInfo: Keypair;
+    rewardDistributionInfo: Keypair;
     gpassBurnAuth: PublicKey;
+    transferAuth: PublicKey;
     ggwpToken: PublicKey;
     accumulativeFund: PublicKey;
+    playToEarnFund: PublicKey;
+    playToEarnFundAuth: PublicKey;
   }
 
   user: {
@@ -29,7 +34,12 @@ export class FightingTestFixture {
   }
 }
 
-export async function prepareFightingTestFixture(fighting: Program<Fighting>, gpass: Program<Gpass>, gpassBurnPeriod?: number): Promise<FightingTestFixture> {
+export async function prepareFightingTestFixture(
+  fighting: Program<Fighting>,
+  gpass: Program<Gpass>,
+  rewardDistribution: Program<RewardDistribution>,
+  gpassBurnPeriod?: number
+): Promise<FightingTestFixture> {
   const admin = Keypair.generate();
   const updateAuth = Keypair.generate();
   const user = Keypair.generate();
@@ -38,19 +48,39 @@ export async function prepareFightingTestFixture(fighting: Program<Fighting>, gp
   await utils.airdropSol(fighting.provider.connection, user.publicKey, 200_000_000_000);
   await utils.airdropSol(fighting.provider.connection, updateAuth.publicKey, 200_000_000_000);
 
+  const gpassInfo = Keypair.generate();
   const fightingSettings = Keypair.generate();
+  const rewardDistributionInfo = Keypair.generate();
+
+  const playToEarnFundAuth = findProgramAddressSync(
+    [
+      utf8.encode(utils.PLAY_TO_EARN_FUND_AUTH_SEED),
+      rewardDistributionInfo.publicKey.toBytes(),
+    ],
+    rewardDistribution.programId
+  )[0];
 
   const ggwpToken = await utils.createMint(admin.publicKey, 9);
   const accumulativeFund = await utils.createTokenWallet(ggwpToken, admin.publicKey);
   const userGgwpTokenWallet = await utils.createTokenWallet(ggwpToken, user.publicKey);
+  const playToEarnFund = await utils.createTokenWallet(ggwpToken, playToEarnFundAuth);
   await utils.mintTokens(ggwpToken, admin, userGgwpTokenWallet, 100_000_000_000);
+  await utils.mintTokens(ggwpToken, admin, playToEarnFund, 100_000_000_000);
 
-  const gpassInfo = Keypair.generate();
   const gpassBurnAuth = findProgramAddressSync(
     [
       utf8.encode(utils.GPASS_BURN_AUTH_SEED),
       fightingSettings.publicKey.toBytes(),
       gpassInfo.publicKey.toBytes(),
+    ],
+    fighting.programId
+  )[0];
+
+  const transferAuth = findProgramAddressSync(
+    [
+      utf8.encode(utils.REWARD_TRANSFER_AUTH_SEED),
+      fightingSettings.publicKey.toBytes(),
+      rewardDistributionInfo.publicKey.toBytes(),
     ],
     fighting.programId
   )[0];
@@ -98,6 +128,18 @@ export async function prepareFightingTestFixture(fighting: Program<Fighting>, gp
     .signers([admin])
     .rpc();
 
+  await rewardDistribution.methods.initialize(updateAuth.publicKey, [transferAuth])
+    .accounts({
+      admin: admin.publicKey,
+      ggwpToken: ggwpToken,
+      playToEarnFund: playToEarnFund,
+      playToEarnFundAuth: playToEarnFundAuth,
+      rewardDistributionInfo: rewardDistributionInfo.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([admin, rewardDistributionInfo])
+    .rpc();
+
   return {
     admin: admin,
     updateAuth: updateAuth,
@@ -105,9 +147,13 @@ export async function prepareFightingTestFixture(fighting: Program<Fighting>, gp
     fighting: {
       settings: fightingSettings,
       gpassInfo: gpassInfo,
+      rewardDistributionInfo: rewardDistributionInfo,
       gpassBurnAuth: gpassBurnAuth,
+      transferAuth: transferAuth,
       ggwpToken: ggwpToken,
       accumulativeFund: accumulativeFund,
+      playToEarnFund: playToEarnFund,
+      playToEarnFundAuth: playToEarnFundAuth,
     },
     user: {
       kp: user,

@@ -3,6 +3,7 @@ import { Program, AnchorError } from "@project-serum/anchor";
 import { SystemProgram } from "@solana/web3.js";
 import { Fighting } from "../../target/types/fighting";
 import { Gpass } from "../../target/types/gpass";
+import { RewardDistribution } from "../../target/types/reward_distribution";
 import * as assert from "assert";
 import * as utils from "../utils";
 import { FightingTestFixture, prepareFightingTestFixture } from "./fixture";
@@ -13,6 +14,7 @@ describe("Fighting functional tests", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const fighting = anchor.workspace.Fighting as Program<Fighting>;
   const gpass = anchor.workspace.Gpass as Program<Gpass>;
+  const rewardDistribution = anchor.workspace.RewardDistribution as Program<RewardDistribution>;
 
   let fixture: FightingTestFixture = null;
   const afkTimeout = 3;
@@ -24,13 +26,15 @@ describe("Fighting functional tests", () => {
   let gameInfo = null;
 
   before(async () => {
-    fixture = await prepareFightingTestFixture(fighting, gpass);
+    fixture = await prepareFightingTestFixture(fighting, gpass, rewardDistribution);
     await fighting.methods.initialize(fixture.updateAuth.publicKey, new anchor.BN(afkTimeout), rewardCoefficient, gpassDailyRewardCoefficient, royalty)
       .accounts({
         admin: fixture.admin.publicKey,
         fightingSettings: fixture.fighting.settings.publicKey,
         gpassBurnAuth: fixture.fighting.gpassBurnAuth,
         gpassInfo: fixture.fighting.gpassInfo.publicKey,
+        rewardDistributionInfo: fixture.fighting.rewardDistributionInfo.publicKey,
+        rewardTransferAuth: fixture.fighting.transferAuth,
         systemProgram: SystemProgram.programId,
       })
       .signers([fixture.admin, fixture.fighting.settings])
