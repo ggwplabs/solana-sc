@@ -1183,6 +1183,7 @@ dependencies = [
  "anchor-spl",
  "freezing",
  "gpass",
+ "reward-distribution",
 ]
 
 [[package]]

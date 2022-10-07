@@ -25,4 +25,6 @@ pub enum FightingError {
     UserNotInGame, // 6006
     #[msg("Invalid actions log size")]
     InvalidActionsLogSize, // 6007
+    #[msg("Invalid play to earn fund address")]
+    InvalidPlayToEarnFundAddress, // 6008
 }

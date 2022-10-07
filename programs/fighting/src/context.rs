@@ -1,11 +1,13 @@
+use crate::error::FightingError;
 use crate::state::{
     Action, FightingSettings, GameInfo, GameResult, Identity, UserFightingInfo, GAME_INFO_SEED,
-    GPASS_BURN_AUTH_SEED, USER_INFO_SEED,
+    GPASS_BURN_AUTH_SEED, REWARD_TRANSFER_AUTH_SEED, USER_INFO_SEED,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::token::{Token, TokenAccount};
 use freezing::state::FreezingInfo;
 use gpass::state::{GpassInfo, Wallet};
+use reward_distribution::state::RewardDistributionInfo;
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -15,6 +17,7 @@ pub struct Initialize<'info> {
     pub fighting_settings: Account<'info, FightingSettings>,
 
     pub gpass_info: Box<Account<'info, GpassInfo>>,
+    pub reward_distribution_info: Box<Account<'info, RewardDistributionInfo>>,
 
     /// CHECK: GPASS Burn auth PDA
     #[account(
@@ -26,6 +29,17 @@ pub struct Initialize<'info> {
         bump,
     )]
     pub gpass_burn_auth: UncheckedAccount<'info>,
+
+    /// CHECK: Reward transfer auth PDA
+    #[account(
+        seeds = [
+            REWARD_TRANSFER_AUTH_SEED.as_bytes(),
+            fighting_settings.key().as_ref(),
+            reward_distribution_info.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub reward_transfer_auth: UncheckedAccount<'info>,
 
     // Misc.
     pub system_program: Program<'info, System>,
@@ -110,13 +124,38 @@ pub struct FinalizeGame<'info> {
     )]
     pub user_info: Box<Account<'info, UserFightingInfo>>,
 
+    #[account(mut)]
+    pub user_ggwp_wallet: Box<Account<'info, TokenAccount>>,
+
     pub fighting_settings: Box<Account<'info, FightingSettings>>,
     pub freezing_info: Box<Account<'info, FreezingInfo>>,
+    pub reward_distribution_info: Box<Account<'info, RewardDistributionInfo>>,
 
-    #[account(mut)] // TODO: check address?
+    /// CHECK: Reward transfer auth PDA
+    #[account(
+        seeds = [
+            REWARD_TRANSFER_AUTH_SEED.as_bytes(),
+            fighting_settings.key().as_ref(),
+            reward_distribution_info.key().as_ref(),
+        ],
+        bump = fighting_settings.reward_transfer_auth_bump,
+    )]
+    pub reward_transfer_auth: UncheckedAccount<'info>,
+
+    #[account(mut,
+        constraint = play_to_earn_fund.key() == reward_distribution_info.play_to_earn_fund
+        @FightingError::InvalidPlayToEarnFundAddress,
+    )]
     pub play_to_earn_fund: Box<Account<'info, TokenAccount>>,
+    /// CHECK: Play to earn fund auth for reward distribution
+    pub play_to_earn_fund_auth: UncheckedAccount<'info>,
 
+    pub accumulative_fund: Box<Account<'info, TokenAccount>>,
 
     // Misc.
+    /// CHECK: reward_distribution_program
+    #[account( constraint = reward_distribution_program.key() == reward_distribution::id() )]
+    pub reward_distribution_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
 }

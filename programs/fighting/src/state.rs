@@ -4,8 +4,9 @@ use core::fmt;
 const DESCRIMINATOR_LEN: usize = 8;
 
 pub const USER_INFO_SEED: &str = "user_info";
-pub const GPASS_BURN_AUTH_SEED: &str = "gpass_burn_auth";
 pub const GAME_INFO_SEED: &str = "game_info";
+pub const GPASS_BURN_AUTH_SEED: &str = "gpass_burn_auth";
+pub const REWARD_TRANSFER_AUTH_SEED: &str = "reward_transfer_auth";
 
 #[account]
 #[derive(Default, Debug)]
@@ -18,6 +19,7 @@ pub struct FightingSettings {
     pub reward_coefficient: u32,
     pub royalty: u8,
     pub gpass_burn_auth_bump: u8,
+    pub reward_transfer_auth_bump: u8,
 }
 
 impl FightingSettings {
@@ -28,7 +30,7 @@ impl FightingSettings {
         4 + // gpass daily reward coefficient
         4 + // reward coefficient
         1 + // royalty
-        1; // gpass burn auth bump
+        1 + 1; // bumps
 }
 
 #[account]

@@ -21,3 +21,4 @@ anchor-spl = "0.25.0"
 
 gpass = { path = "../gpass", features = ["cpi"] }
 freezing = { path = "../freezing", features = ["cpi"] }
+reward-distribution = { path = "../reward-distribution", features = ["cpi"] }

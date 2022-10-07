@@ -1,6 +1,8 @@
 use crate::context::*;
 use crate::error::FightingError;
-use crate::state::{GameResult, IdentityAction, ACTIONS_VEC_MAX, GPASS_BURN_AUTH_SEED};
+use crate::state::{
+    GameResult, IdentityAction, ACTIONS_VEC_MAX, GPASS_BURN_AUTH_SEED, REWARD_TRANSFER_AUTH_SEED,
+};
 use anchor_lang::prelude::*;
 
 mod context;
@@ -33,6 +35,7 @@ pub mod fighting {
         fighting_settings.gpass_daily_reward_coefficient = gpass_daily_reward_coefficient;
         fighting_settings.royalty = royalty;
         fighting_settings.gpass_burn_auth_bump = ctx.bumps["gpass_burn_auth"];
+        fighting_settings.reward_transfer_auth_bump = ctx.bumps["reward_transfer_auth"];
 
         Ok(())
     }
@@ -194,9 +197,16 @@ pub mod fighting {
     ) -> Result<()> {
         let fighting_settings = &ctx.accounts.fighting_settings;
         let user_info = &mut ctx.accounts.user_info;
+        let user_ggwp_wallet = &ctx.accounts.user_ggwp_wallet;
         let game_info = &mut ctx.accounts.game_info;
+        let reward_distribution_info = &ctx.accounts.reward_distribution_info;
         let play_to_earn_fund = &ctx.accounts.play_to_earn_fund;
+        let play_to_earn_fund_auth = &ctx.accounts.play_to_earn_fund_auth;
+        let accumulative_fund = &ctx.accounts.accumulative_fund;
         let freezing_info = &ctx.accounts.freezing_info;
+        let reward_transfer_auth = &ctx.accounts.reward_transfer_auth;
+        let reward_distribution_program = &ctx.accounts.reward_distribution_program;
+        let token_program = &ctx.accounts.token_program;
 
         require_eq!(user_info.in_game, true, FightingError::UserNotInGame);
         require_neq!(actions_log.len(), 0, FightingError::InvalidActionsLogSize);
@@ -220,8 +230,50 @@ pub mod fighting {
             if reward_amount > 0 {
                 let royalty_amount =
                     utils::calc_share_amount(fighting_settings.royalty, reward_amount)?;
-                // TODO: transfer reward_amount to user
-                // TODO: transfer royalty_amount to accumulative fund
+
+                msg!("Reward amount: {}", reward_amount);
+                msg!("Royalty amount: {}", royalty_amount);
+
+                // Transfer reward_amount - royalty_amount to user
+                let seeds = &[
+                    REWARD_TRANSFER_AUTH_SEED.as_bytes(),
+                    fighting_settings.to_account_info().key.as_ref(),
+                    reward_distribution_info.to_account_info().key.as_ref(),
+                    &[fighting_settings.reward_transfer_auth_bump],
+                ];
+                let signer = &[&seeds[..]];
+                reward_distribution::cpi::transfer(
+                    CpiContext::new_with_signer(
+                        reward_distribution_program.to_account_info(),
+                        reward_distribution::cpi::accounts::Transfer {
+                            reward_distribution_info: reward_distribution_info.to_account_info(),
+                            authority: reward_transfer_auth.to_account_info(),
+                            to: user_ggwp_wallet.to_account_info(),
+                            play_to_earn_fund: play_to_earn_fund.to_account_info(),
+                            play_to_earn_fund_auth: play_to_earn_fund_auth.to_account_info(),
+                            token_program: token_program.to_account_info(),
+                        },
+                        signer,
+                    ),
+                    reward_amount - royalty_amount,
+                )?;
+
+                // Transfer royalty_amount to accumulative fund
+                reward_distribution::cpi::transfer(
+                    CpiContext::new_with_signer(
+                        reward_distribution_program.to_account_info(),
+                        reward_distribution::cpi::accounts::Transfer {
+                            reward_distribution_info: reward_distribution_info.to_account_info(),
+                            authority: reward_transfer_auth.to_account_info(),
+                            to: accumulative_fund.to_account_info(),
+                            play_to_earn_fund: play_to_earn_fund.to_account_info(),
+                            play_to_earn_fund_auth: play_to_earn_fund_auth.to_account_info(),
+                            token_program: token_program.to_account_info(),
+                        },
+                        signer,
+                    ),
+                    royalty_amount,
+                )?;
             }
         }
 
