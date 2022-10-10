@@ -9,6 +9,8 @@ import { Fighting } from "../../target/types/fighting";
 import { Gpass } from "../../target/types/gpass";
 import { RewardDistribution } from "../../target/types/reward_distribution";
 import * as utils from "../utils";
+import { Freezing } from "../../target/types/freezing";
+import { TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 
 export class FightingTestFixture {
   admin: Keypair;
@@ -17,8 +19,12 @@ export class FightingTestFixture {
   fighting: {
     settings: Keypair;
     gpassInfo: Keypair;
+    freezingInfo: Keypair;
+    freezingTreasury: PublicKey;
+    freezingTreasuryAuth: PublicKey;
     rewardDistributionInfo: Keypair;
     gpassBurnAuth: PublicKey;
+    gpassMintAuth: PublicKey;
     transferAuth: PublicKey;
     ggwpToken: PublicKey;
     accumulativeFund: PublicKey;
@@ -29,6 +35,7 @@ export class FightingTestFixture {
   user: {
     kp: Keypair;
     info: PublicKey;
+    freezingInfo: PublicKey;
     gpassWallet: PublicKey;
     ggwpWallet: PublicKey;
   }
@@ -38,6 +45,8 @@ export async function prepareFightingTestFixture(
   fighting: Program<Fighting>,
   gpass: Program<Gpass>,
   rewardDistribution: Program<RewardDistribution>,
+  freezing: Program<Freezing>,
+  freezingRewardPeriod?: number,
   gpassBurnPeriod?: number
 ): Promise<FightingTestFixture> {
   const admin = Keypair.generate();
@@ -51,6 +60,7 @@ export async function prepareFightingTestFixture(
   const gpassInfo = Keypair.generate();
   const fightingSettings = Keypair.generate();
   const rewardDistributionInfo = Keypair.generate();
+  const freezingInfo = Keypair.generate();
 
   const playToEarnFundAuth = findProgramAddressSync(
     [
@@ -60,7 +70,16 @@ export async function prepareFightingTestFixture(
     rewardDistribution.programId
   )[0];
 
+  const freezingTreasuryAuth = findProgramAddressSync(
+    [
+      utf8.encode(utils.TREASURY_AUTH_SEED),
+      freezingInfo.publicKey.toBytes(),
+    ],
+    freezing.programId,
+  )[0];
+
   const ggwpToken = await utils.createMint(admin.publicKey, 9);
+  const freezingTreasury = await utils.createTokenWallet(ggwpToken, freezingTreasuryAuth);
   const accumulativeFund = await utils.createTokenWallet(ggwpToken, admin.publicKey);
   const userGgwpTokenWallet = await utils.createTokenWallet(ggwpToken, user.publicKey);
   const playToEarnFund = await utils.createTokenWallet(ggwpToken, playToEarnFundAuth);
@@ -76,6 +95,15 @@ export async function prepareFightingTestFixture(
     fighting.programId
   )[0];
 
+  const gpassMintAuth = findProgramAddressSync(
+    [
+      utf8.encode(utils.GPASS_MINT_AUTH_SEED),
+      freezingInfo.publicKey.toBytes(),
+      gpassInfo.publicKey.toBytes(),
+    ],
+    freezing.programId
+  )[0];
+
   const transferAuth = findProgramAddressSync(
     [
       utf8.encode(utils.REWARD_TRANSFER_AUTH_SEED),
@@ -89,7 +117,7 @@ export async function prepareFightingTestFixture(
   await gpass.methods.initialize(
     new anchor.BN(burnPeriod),
     updateAuth.publicKey,
-    [admin.publicKey],
+    [gpassMintAuth],
     [gpassBurnAuth])
     .accounts({
       admin: admin.publicKey,
@@ -117,6 +145,15 @@ export async function prepareFightingTestFixture(
     fighting.programId,
   )[0];
 
+  const userFreezingInfo = findProgramAddressSync(
+    [
+      utf8.encode(utils.USER_INFO_SEED),
+      freezingInfo.publicKey.toBytes(),
+      user.publicKey.toBytes(),
+    ],
+    freezing.programId,
+  )[0];
+
   await gpass.methods.createWallet()
     .accounts({
       payer: admin.publicKey,
@@ -140,6 +177,45 @@ export async function prepareFightingTestFixture(
     .signers([admin, rewardDistributionInfo])
     .rpc();
 
+  const rewardTable = [
+    {
+      ggwpAmount: new anchor.BN(10_000_000_000),
+      gpassAmount: new anchor.BN(5),
+    },
+    {
+      ggwpAmount: new anchor.BN(20_000_000_000),
+      gpassAmount: new anchor.BN(10),
+    },
+    {
+      ggwpAmount: new anchor.BN(30_000_000_000),
+      gpassAmount: new anchor.BN(15),
+    }
+  ];
+
+  let rewardPeriod = freezingRewardPeriod ? freezingRewardPeriod : 3;
+  await freezing.methods.initialize(
+    updateAuth.publicKey,
+    new anchor.BN(rewardPeriod),
+    8,
+    15,
+    new anchor.BN(2),
+    rewardTable,
+  )
+    .accounts({
+      admin: admin.publicKey,
+      freezingInfo: freezingInfo.publicKey,
+      ggwpToken: ggwpToken,
+      accumulativeFund: accumulativeFund,
+      gpassInfo: gpassInfo.publicKey,
+      gpassMintAuth: gpassMintAuth,
+      treasury: freezingTreasury,
+      treasuryAuth: freezingTreasuryAuth,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .signers([admin, freezingInfo])
+    .rpc();
+
   return {
     admin: admin,
     updateAuth: updateAuth,
@@ -147,8 +223,12 @@ export async function prepareFightingTestFixture(
     fighting: {
       settings: fightingSettings,
       gpassInfo: gpassInfo,
+      freezingInfo: freezingInfo,
+      freezingTreasury: freezingTreasury,
+      freezingTreasuryAuth: freezingTreasuryAuth,
       rewardDistributionInfo: rewardDistributionInfo,
       gpassBurnAuth: gpassBurnAuth,
+      gpassMintAuth: gpassMintAuth,
       transferAuth: transferAuth,
       ggwpToken: ggwpToken,
       accumulativeFund: accumulativeFund,
@@ -158,6 +238,7 @@ export async function prepareFightingTestFixture(
     user: {
       kp: user,
       info: userFightingInfo,
+      freezingInfo: userFreezingInfo,
       ggwpWallet: userGgwpTokenWallet,
       gpassWallet: userGpassWallet,
     }

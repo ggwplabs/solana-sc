@@ -150,6 +150,7 @@ pub struct FinalizeGame<'info> {
     /// CHECK: Play to earn fund auth for reward distribution
     pub play_to_earn_fund_auth: UncheckedAccount<'info>,
 
+    #[account(mut)]
     pub accumulative_fund: Box<Account<'info, TokenAccount>>,
 
     // Misc.

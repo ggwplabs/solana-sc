@@ -6,6 +6,7 @@ import {
 import { Fighting } from "../../target/types/fighting";
 import { Gpass } from "../../target/types/gpass";
 import { RewardDistribution } from "../../target/types/reward_distribution";
+import { Freezing } from "../../target/types/freezing";
 import * as assert from "assert";
 import * as utils from "../utils";
 import { FightingTestFixture, prepareFightingTestFixture } from "./fixture";
@@ -15,10 +16,11 @@ describe("Fighting authority tests", () => {
   const fighting = anchor.workspace.Fighting as Program<Fighting>;
   const gpass = anchor.workspace.Gpass as Program<Gpass>;
   const rewardDistribution = anchor.workspace.RewardDistribution as Program<RewardDistribution>;
+  const freezing = anchor.workspace.Freezing as Program<Freezing>;
 
   let fixture: FightingTestFixture = null;
   before(async () => {
-    fixture = await prepareFightingTestFixture(fighting, gpass, rewardDistribution);
+    fixture = await prepareFightingTestFixture(fighting, gpass, rewardDistribution, freezing);
     await fighting.methods.initialize(fixture.updateAuth.publicKey, new anchor.BN(100), 100, 200, 8)
       .accounts({
         admin: fixture.admin.publicKey,
