@@ -6,6 +6,7 @@
         "freezing": "<Pubkey>",
         "staking": "<Pubkey>",
         "distribution": "<Pubkey>",
+        "reward_distribution": "<Pubkey>",
         "fighting": "<Pubkey>"
     }
 }

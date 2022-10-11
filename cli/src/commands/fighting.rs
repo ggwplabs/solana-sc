@@ -34,11 +34,40 @@ pub fn get_fighting_commands<'a, 'b>() -> App<'a, 'b> {
                         .help("The GPASS info pubkey."),
                 )
                 .arg(
+                    Arg::with_name("reward_distribution_info")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The Reward Distribution info pubkey."),
+                )
+                .arg(
                     Arg::with_name("afk_timeout")
                         .value_name("i64")
                         .required(true)
                         .takes_value(true)
                         .help("The AFK timeout in seconds."),
+                )
+                .arg(
+                    Arg::with_name("royalty")
+                        .value_name("u8")
+                        .required(true)
+                        .takes_value(true)
+                        .help("The royalty in percent."),
+                )
+                .arg(
+                    Arg::with_name("reward_coefficient")
+                        .value_name("u32")
+                        .required(true)
+                        .takes_value(true)
+                        .help("The reward coefficient value."),
+                )
+                .arg(
+                    Arg::with_name("gpass_daily_reward_coefficient")
+                        .value_name("u32")
+                        .required(true)
+                        .takes_value(true)
+                        .help("The gpass daily reward coefficient value."),
                 ),
         )
         .subcommand(

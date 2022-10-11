@@ -8,7 +8,7 @@ use clap::value_t_or_exit;
 use clap::{ArgMatches, Error};
 use fighting::state::{
     FightingSettings, GameInfo, UserFightingInfo, GAME_INFO_SEED, GPASS_BURN_AUTH_SEED,
-    USER_INFO_SEED,
+    REWARD_TRANSFER_AUTH_SEED, USER_INFO_SEED,
 };
 
 pub fn handle(
@@ -23,10 +23,25 @@ pub fn handle(
             println!("Commad initialize");
             let update_auth = value_t_or_exit!(arg_matches, "update_auth", Pubkey);
             let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
+            let reward_distribution_info =
+                value_t_or_exit!(arg_matches, "reward_distribution_info", Pubkey);
             let afk_timeout = value_t_or_exit!(arg_matches, "afk_timeout", i64);
+            let royalty = value_t_or_exit!(arg_matches, "royalty", u8);
+            let reward_coefficient = value_t_or_exit!(arg_matches, "reward_coefficient", u32);
+            let gpass_daily_reward_coefficient =
+                value_t_or_exit!(arg_matches, "gpass_daily_reward_coefficient", u32);
 
-            cmd_initialize(&program, update_auth, gpass_info, afk_timeout)
-                .expect("Initialize error");
+            cmd_initialize(
+                &program,
+                update_auth,
+                gpass_info,
+                reward_distribution_info,
+                afk_timeout,
+                royalty,
+                reward_coefficient,
+                gpass_daily_reward_coefficient,
+            )
+            .expect("Initialize error");
 
             println!("Successful");
             Ok(())
@@ -125,7 +140,11 @@ fn cmd_initialize(
     program: &Program,
     update_auth: Pubkey,
     gpass_info: Pubkey,
+    reward_distribution_info: Pubkey,
     afk_timeout: i64,
+    royalty: u8,
+    reward_coefficient: u32,
+    gpass_daily_reward_coefficient: u32,
 ) -> Result<(), ClientError> {
     let fighting_settings = Keypair::new();
     println!(
@@ -143,11 +162,23 @@ fn cmd_initialize(
     );
     println!("GPASS burn auth PK: {}", gpass_burn_auth);
 
+    let (reward_transfer_auth, _) = Pubkey::find_program_address(
+        &[
+            REWARD_TRANSFER_AUTH_SEED.as_bytes(),
+            fighting_settings.pubkey().as_ref(),
+            reward_distribution_info.as_ref(),
+        ],
+        &program.id(),
+    );
+    println!("Reward transfer auth PK: {}", reward_transfer_auth);
+
     program
         .request()
         .accounts(fighting::accounts::Initialize {
             admin: program.payer(),
             fighting_settings: fighting_settings.pubkey(),
+            reward_distribution_info: reward_distribution_info,
+            reward_transfer_auth: reward_transfer_auth,
             gpass_info: gpass_info,
             gpass_burn_auth: gpass_burn_auth,
             system_program: system_program::ID,
@@ -155,6 +186,9 @@ fn cmd_initialize(
         .args(fighting::instruction::Initialize {
             update_auth: update_auth,
             afk_timeout: afk_timeout,
+            royalty: royalty,
+            reward_coefficient: reward_coefficient,
+            gpass_daily_reward_coefficient: gpass_daily_reward_coefficient,
         })
         .signer(&fighting_settings)
         .send()?;

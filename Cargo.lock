@@ -722,6 +722,7 @@ dependencies = [
  "fighting",
  "freezing",
  "gpass",
+ "reward-distribution",
  "serde",
  "serde_json",
  "solana-clap-utils",

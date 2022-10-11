@@ -25,12 +25,14 @@ pub fn handle(
     freezing_program_id: Pubkey,
     staking_program_id: Pubkey,
     distribution_program_id: Pubkey,
+    reward_distribution_program_id: Pubkey,
     figting_program_id: Pubkey,
 ) -> Result<(), Error> {
     let gpass_program = client.program(gpass_program_id);
     let freezing_program = client.program(freezing_program_id);
     let staking_program = client.program(staking_program_id);
     let distribution_program = client.program(distribution_program_id);
+    let reward_distribution_program = client.program(reward_distribution_program_id);
     let fighting_program = client.program(figting_program_id);
 
     let params = ProgramsParams::get_by_cluster(cluster);
@@ -43,16 +45,21 @@ pub fn handle(
             println!("Start initialize infrastructure");
             let update_auth = value_t_or_exit!(arg_matches, "update_auth", Pubkey);
             let ggwp_token = value_t_or_exit!(arg_matches, "ggwp_token", Pubkey);
+            let team_fund_auth = value_t_or_exit!(arg_matches, "team_fund_auth", Pubkey);
+            let company_fund_auth = value_t_or_exit!(arg_matches, "company_fund_auth", Pubkey);
 
             cmd_init_all(
                 gpass_program,
                 freezing_program,
                 staking_program,
                 distribution_program,
+                reward_distribution_program,
                 fighting_program,
                 params,
                 update_auth,
                 ggwp_token,
+                team_fund_auth,
+                company_fund_auth,
             )
             .expect("Init all command error");
 
@@ -71,10 +78,13 @@ pub fn cmd_init_all(
     freezing_program: Program,
     staking_program: Program,
     distribution_program: Program,
+    reward_distribution_program: Program,
     fighting_program: Program,
     params: ProgramsParams,
     update_auth: Pubkey,
     ggwp_token: Pubkey,
+    team_fund_auth: Pubkey,
+    company_fund_auth: Pubkey,
 ) -> Result<(), ClientError> {
     // TODO: deploy command
     // Initial checks
@@ -83,15 +93,19 @@ pub fn cmd_init_all(
     assert_eq!(staking::id(), staking_program.id());
     assert_eq!(distribution::id(), distribution_program.id());
     assert_eq!(fighting::id(), fighting_program.id());
+    assert_eq!(reward_distribution::id(), reward_distribution_program.id());
 
     let admin_pk = gpass_program.payer();
     assert_eq!(admin_pk, freezing_program.payer());
     assert_eq!(admin_pk, staking_program.payer());
     assert_eq!(admin_pk, distribution_program.payer());
     assert_eq!(admin_pk, fighting_program.payer());
+    assert_eq!(admin_pk, reward_distribution_program.payer());
 
     println!("Admin PK: {}", admin_pk);
     println!("Update authority: {}", update_auth);
+    println!("Team fund auth: {}", team_fund_auth);
+    println!("Company fund auth: {}", company_fund_auth);
     println!();
 
     let admin_balance_before = gpass_program.rpc().get_balance(&admin_pk)?;
@@ -107,12 +121,17 @@ pub fn cmd_init_all(
     let freezing_info = Keypair::new();
     let staking_info = Keypair::new();
     let distribution_info = Keypair::new();
+    let reward_distribution_info = Keypair::new();
     let fighting_settings = Keypair::new();
 
     println!("New GPASS info PK: {}", gpass_info.pubkey());
     println!("New freezing info PK: {}", freezing_info.pubkey());
     println!("New staking info PK: {}", staking_info.pubkey());
     println!("New distribution info PK: {}", distribution_info.pubkey());
+    println!(
+        "New reward distribution info PK: {}",
+        reward_distribution_info.pubkey()
+    );
     println!("New fighting settings PK: {}", fighting_settings.pubkey());
     println!();
 
@@ -135,7 +154,7 @@ pub fn cmd_init_all(
         ],
         &fighting_program.id(),
     );
-    println!("Fighting GPASS burn auth: {}", freezing_gpass_mint_auth);
+    println!("Fighting GPASS burn auth: {}", fighting_gpass_burn_auth);
 
     let (freezing_treasury_auth, _) = Pubkey::find_program_address(
         &[
@@ -171,7 +190,29 @@ pub fn cmd_init_all(
         ],
         &distribution_program.id(),
     );
-    println!("Accumulative fund auth: {}", staking_treasury_auth);
+    println!("Accumulative fund auth: {}", accumulative_fund_auth);
+
+    let (play_to_earn_fund_auth, _) = Pubkey::find_program_address(
+        &[
+            reward_distribution::state::PLAY_TO_EARN_FUND_AUTH_SEED.as_bytes(),
+            reward_distribution_info.pubkey().as_ref(),
+        ],
+        &reward_distribution_program.id(),
+    );
+    println!("Play to earn fund auth: {}", play_to_earn_fund_auth);
+
+    let (fighting_reward_transfer_auth, _) = Pubkey::find_program_address(
+        &[
+            fighting::state::REWARD_TRANSFER_AUTH_SEED.as_bytes(),
+            fighting_settings.pubkey().as_ref(),
+            reward_distribution_info.pubkey().as_ref(),
+        ],
+        &fighting_program.id(),
+    );
+    println!(
+        "Fighting reward transfer auth PK: {}",
+        fighting_reward_transfer_auth
+    );
 
     println!();
 
@@ -183,10 +224,11 @@ pub fn cmd_init_all(
     let accumulative_fund =
         get_or_create_token_account(&gpass_program, ggwp_token, accumulative_fund_auth)?;
     let staking_fund = get_or_create_token_account(&gpass_program, ggwp_token, staking_fund_auth)?;
+    let play_to_earn_fund =
+        get_or_create_token_account(&gpass_program, ggwp_token, play_to_earn_fund_auth)?;
     // TODO: temporary owners for wallets
-    let play_to_earn_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
-    let company_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
-    let team_fund = get_or_create_token_account(&gpass_program, ggwp_token, admin_pk)?;
+    let company_fund = get_or_create_token_account(&gpass_program, ggwp_token, company_fund_auth)?;
+    let team_fund = get_or_create_token_account(&gpass_program, ggwp_token, team_fund_auth)?;
 
     println!(
         "Accumulative fund (owner: {}): {}",
@@ -198,10 +240,13 @@ pub fn cmd_init_all(
     );
     println!(
         "Play to earn fund (owner: {}): {}",
-        admin_pk, play_to_earn_fund
+        play_to_earn_fund_auth, play_to_earn_fund
     );
-    println!("Company fund (owner: {}): {}", admin_pk, company_fund);
-    println!("Team fund (owner: {}): {}", admin_pk, team_fund);
+    println!(
+        "Company fund (owner: {}): {}",
+        company_fund_auth, company_fund
+    );
+    println!("Team fund (owner: {}): {}", team_fund_auth, team_fund);
     println!();
 
     // Init distribution with funds info
@@ -231,6 +276,31 @@ pub fn cmd_init_all(
     let distribution_info_data: DistributionInfo =
         distribution_program.account(distribution_info.pubkey())?;
     println!("Distribution Initalized: {:?}", distribution_info_data);
+    println!();
+
+    reward_distribution_program
+        .request()
+        .accounts(reward_distribution::accounts::Initialize {
+            admin: admin_pk,
+            reward_distribution_info: reward_distribution_info.pubkey(),
+            ggwp_token: ggwp_token,
+            play_to_earn_fund: play_to_earn_fund,
+            play_to_earn_fund_auth: play_to_earn_fund_auth,
+            system_program: system_program::ID,
+        })
+        .args(reward_distribution::instruction::Initialize {
+            update_auth: update_auth,
+            transfer_auth_list: vec![fighting_reward_transfer_auth],
+        })
+        .signer(&reward_distribution_info)
+        .send()?;
+    let reward_distribution_info_data: DistributionInfo =
+        reward_distribution_program.account(reward_distribution_info.pubkey())?;
+    println!(
+        "Reward distribution Initalized: {:?}",
+        reward_distribution_info_data
+    );
+    println!();
 
     // Init GPASS with lists of minters and burners
     gpass_program
@@ -250,6 +320,7 @@ pub fn cmd_init_all(
         .send()?;
     let gpass_info_data: GpassInfo = gpass_program.account(gpass_info.pubkey())?;
     println!("GPASS Initalized: {:?}", gpass_info_data);
+    println!();
 
     // Init Freezing with gpass settings
     let reward_table = vec![
@@ -301,6 +372,7 @@ pub fn cmd_init_all(
         .send()?;
     let freezing_info_data: FreezingInfo = freezing_program.account(freezing_info.pubkey())?;
     println!("Freezing info initialized: {:?}", freezing_info_data);
+    println!();
 
     // Init Staking
     staking_program
@@ -331,6 +403,7 @@ pub fn cmd_init_all(
         .send()?;
     let staking_info_data: StakingInfo = staking_program.account(staking_info.pubkey())?;
     println!("Staking info initialized: {:?}", staking_info_data);
+    println!();
 
     fighting_program
         .request()
@@ -339,17 +412,23 @@ pub fn cmd_init_all(
             fighting_settings: fighting_settings.pubkey(),
             gpass_burn_auth: fighting_gpass_burn_auth,
             gpass_info: gpass_info.pubkey(),
+            reward_distribution_info: reward_distribution_info.pubkey(),
+            reward_transfer_auth: fighting_reward_transfer_auth,
             system_program: system_program::ID,
         })
         .args(fighting::instruction::Initialize {
             update_auth: update_auth,
             afk_timeout: params.fighting.afk_timeout,
+            royalty: params.fighting.royalty,
+            reward_coefficient: params.fighting.reward_coefficient,
+            gpass_daily_reward_coefficient: params.fighting.gpass_daily_reward_coefficient,
         })
         .signer(&fighting_settings)
         .send()?;
     let fighting_settings_data: FightingSettings =
         fighting_program.account(fighting_settings.pubkey())?;
     println!("Fighting settings: {:?}", fighting_settings_data);
+    println!();
 
     println!();
 
@@ -408,6 +487,9 @@ pub struct StakingParams {
 #[derive(Debug)]
 pub struct FightingParams {
     pub afk_timeout: i64,
+    pub royalty: u8,
+    pub reward_coefficient: u32,
+    pub gpass_daily_reward_coefficient: u32,
 }
 
 impl ProgramsParams {
@@ -441,6 +523,9 @@ impl ProgramsParams {
                 },
                 fighting: FightingParams {
                     afk_timeout: 1 * 60 * 60,
+                    royalty: 8,
+                    reward_coefficient: 20000,
+                    gpass_daily_reward_coefficient: 10,
                 },
             },
             Cluster::Testnet => ProgramsParams {
@@ -471,6 +556,9 @@ impl ProgramsParams {
                 },
                 fighting: FightingParams {
                     afk_timeout: 1 * 60 * 60,
+                    royalty: 8,
+                    reward_coefficient: 20000,
+                    gpass_daily_reward_coefficient: 10,
                 },
             },
             Cluster::Mainnet => ProgramsParams {
@@ -501,6 +589,9 @@ impl ProgramsParams {
                 },
                 fighting: FightingParams {
                     afk_timeout: 1 * 60 * 60,
+                    royalty: 8,
+                    reward_coefficient: 20000,
+                    gpass_daily_reward_coefficient: 10,
                 },
             },
             _ => panic!("Bad cluster"),

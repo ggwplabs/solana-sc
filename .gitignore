@@ -7,3 +7,4 @@ node_modules
 test-ledger
 cli_config.json.devnet
 tests/staking/with_updated_time.ts
+*-keypair.json

@@ -100,6 +100,8 @@ fn main() {
                     .expect("Error in parsing staking program id"),
                 Pubkey::from_str(&config.programs.distribution)
                     .expect("Error in parsing distribution program id"),
+                Pubkey::from_str(&config.programs.reward_distribution)
+                    .expect("Error in parsing reward distribution program id"),
                 Pubkey::from_str(&config.programs.fighting)
                     .expect("Error in parsing fighting program id"),
             )

@@ -24,6 +24,7 @@ gpass = { path = "../programs/gpass", features = ["no-entrypoint"] }
 freezing = { path = "../programs/freezing", features = ["no-entrypoint"] }
 staking = { path = "../programs/staking", features = ["no-entrypoint"] }
 distribution = { path = "../programs/distribution", features = ["no-entrypoint"] }
+reward-distribution = { path = "../programs/reward-distribution", features = ["no-entrypoint"] }
 fighting = { path = "../programs/fighting", features = ["no-entrypoint"] }
 
 [[bin]]
