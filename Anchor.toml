@@ -6,6 +6,8 @@ gpass = "Gv9WAng6iPymaDwXMQrbsh2uTkDpAPTB89Ld4ctJejMG"
 freezing = "ABHUowgjyTkmbMRRuMYJ5ui4wAz6Z6HE4PQMHy9YqMrQ"
 staking = "ELRFw9awBQFuvvxnf3R1Xaihdy6ypWY7sH6nTNXh8EX1"
 distribution = "79GShMQgEBcfpiiwkBxv3yBxHqCN8J2E8DhivatqpfYC"
+reward_distribution = "5ihGT7nkjxfo1M43NZrPbbDBG4Js215ftJp6uksnNCEP"
+fighting = "F23aPzza8PQyFmBwPT7eKv3oabEoBwa5aSFAHwYSfam6"
 
 [registry]
 url = "https://api.apr.dev"
@@ -19,8 +21,9 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 # Exact functional test
-start-validator = "rm -r .anchor/test-ledger && solana-test-validator -l .anchor/test-ledger --bpf-program target/deploy/gpass-keypair.json target/deploy/gpass.so --bpf-program target/deploy/freezing-keypair.json target/deploy/freezing.so --bpf-program target/deploy/staking-keypair.json target/deploy/staking.so"
+start-validator = "rm -r .anchor/test-ledger && solana-test-validator -l .anchor/test-ledger --bpf-program target/deploy/gpass-keypair.json target/deploy/gpass.so --bpf-program target/deploy/freezing-keypair.json target/deploy/freezing.so --bpf-program target/deploy/staking-keypair.json target/deploy/staking.so --bpf-program target/deploy/fighting-keypair.json target/deploy/fighting.so  --bpf-program target/deploy/reward_distribution-keypair.json target/deploy/reward_distribution.so"
 test-gpass = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/gpass/*.ts"
 test-freezing = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/freezing/*.ts"
 test-staking = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/staking/*.ts"
 test-distribution = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/distribution/*.ts"
+test-fighting = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/fighting/*.ts"

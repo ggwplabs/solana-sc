@@ -1,7 +1,8 @@
 //! CLI Client for interacting with the smart contracts
 use crate::commands::{
     common::get_common_commands, distribution::get_distribution_commands,
-    freezing::get_freezing_commands, staking::get_staking_commands,
+    fighting::get_fighting_commands, freezing::get_freezing_commands,
+    reward_distribution::get_reward_distribution_commands, staking::get_staking_commands,
 };
 use anchor_client::{
     solana_sdk::{
@@ -24,7 +25,9 @@ fn main() {
     let app = app.subcommand(get_freezing_commands());
     let app = app.subcommand(get_staking_commands());
     let app = app.subcommand(get_distribution_commands());
+    let app = app.subcommand(get_reward_distribution_commands());
     let app = app.subcommand(get_common_commands());
+    let app = app.subcommand(get_fighting_commands());
     let app_matches = app.get_matches();
 
     let config = if let Some(config_path) = app_matches.value_of("config") {
@@ -85,6 +88,16 @@ fn main() {
             .expect("Distribution handler error");
         }
 
+        (commands::CMDS_REWARD_DISTRIBUTION, Some(cmd_matches)) => {
+            handlers::reward_distribution::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.reward_distribution)
+                    .expect("Error in parsing reward distribution program id"),
+            )
+            .expect("Reward Distribution handler error");
+        }
+
         (commands::CMDS_COMMON, Some(cmd_matches)) => {
             handlers::common::handle(
                 cmd_matches,
@@ -98,9 +111,24 @@ fn main() {
                     .expect("Error in parsing staking program id"),
                 Pubkey::from_str(&config.programs.distribution)
                     .expect("Error in parsing distribution program id"),
+                Pubkey::from_str(&config.programs.reward_distribution)
+                    .expect("Error in parsing reward distribution program id"),
+                Pubkey::from_str(&config.programs.fighting)
+                    .expect("Error in parsing fighting program id"),
             )
             .expect("Common handler error");
         }
+
+        (commands::CMDS_FIGHTING, Some(cmd_matches)) => {
+            handlers::fighting::handle(
+                cmd_matches,
+                &client,
+                Pubkey::from_str(&config.programs.fighting)
+                    .expect("Error in parsing fighting program id"),
+            )
+            .expect("Fighting handler error");
+        }
+
         _ => {
             println!("{}", app_matches.usage());
         }

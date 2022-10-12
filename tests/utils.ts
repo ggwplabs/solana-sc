@@ -11,6 +11,10 @@ export const STAKING_FUND_AUTH_SEED = "staking_fund_auth";
 export const USER_INFO_SEED = "user_info";
 export const USER_WALLET_SEED = "user_gpass_wallet";
 export const ACCUMULATIVE_FUND_AUTH_SEED = "accumulative_fund_auth";
+export const GPASS_BURN_AUTH_SEED = "gpass_burn_auth";
+export const GAME_INFO_SEED = "game_info";
+export const PLAY_TO_EARN_FUND_AUTH_SEED = "play_to_earn_fund_auth";
+export const REWARD_TRANSFER_AUTH_SEED = "reward_transfer_auth";
 
 export async function airdropSol(conn: Connection, to: PublicKey, amount: number) {
     const airdropSignature = await conn.requestAirdrop(to, amount);
@@ -87,4 +91,8 @@ export async function getTokenBalance(wallet: PublicKey): Promise<number> {
 
 export function calcRoyaltyAmount(amount: number, royalty: number): number {
     return amount / 100 * royalty;
+}
+
+export function amountToUiAmount(amount: number, decimals: number): number {
+    return amount / (10 ** decimals);
 }

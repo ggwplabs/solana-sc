@@ -31,6 +31,22 @@ pub fn get_common_commands<'a, 'b>() -> App<'a, 'b> {
                         .required(true)
                         .takes_value(true)
                         .help("GGWP Token mint pubkey."),
+                )
+                .arg(
+                    Arg::with_name("team_fund_auth")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("Team fund auth pubkey."),
+                )
+                .arg(
+                    Arg::with_name("company_fund_auth")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("Company fund auth pubkey."),
                 ),
         )
 }

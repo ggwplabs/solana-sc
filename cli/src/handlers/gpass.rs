@@ -65,7 +65,7 @@ pub fn handle(cmd_matches: &ArgMatches, client: &Client, program_id: Pubkey) -> 
 
         (commands::gpass::CMD_UPDATE_BURNERS, Some(arg_matches)) => {
             let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
-            let burners = values_t!(arg_matches, "burners", Pubkey).unwrap_or_default();
+            let burners = values_t!(arg_matches, "burner", Pubkey).unwrap_or_default();
             cmd_update_burners(&program, gpass_info, burners).expect("Update burners error");
 
             println!("Successful");

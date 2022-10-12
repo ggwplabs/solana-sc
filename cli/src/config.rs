@@ -16,6 +16,8 @@ pub struct Programs {
     pub freezing: String,
     pub staking: String,
     pub distribution: String,
+    pub reward_distribution: String,
+    pub fighting: String,
 }
 
 impl Default for CLIConfig {
@@ -31,6 +33,8 @@ impl Default for CLIConfig {
             freezing: freezing::id().to_string(),
             staking: staking::id().to_string(),
             distribution: distribution::id().to_string(),
+            reward_distribution: reward_distribution::id().to_string(),
+            fighting: fighting::id().to_string(),
         };
 
         Self {

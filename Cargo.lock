@@ -719,8 +719,10 @@ dependencies = [
  "clap",
  "dirs-next",
  "distribution",
+ "fighting",
  "freezing",
  "gpass",
+ "reward-distribution",
  "serde",
  "serde_json",
  "solana-clap-utils",
@@ -1173,6 +1175,17 @@ name = "feature-probe"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "835a3dc7d1ec9e75e2b5fb4ba75396837112d2060b03f7d43bc1897c7f7211da"
+
+[[package]]
+name = "fighting"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "freezing",
+ "gpass",
+ "reward-distribution",
+]
 
 [[package]]
 name = "filetime"
@@ -2628,6 +2641,14 @@ dependencies = [
  "web-sys",
  "webpki-roots",
  "winreg",
+]
+
+[[package]]
+name = "reward-distribution"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
 ]
 
 [[package]]

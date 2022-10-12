@@ -30,5 +30,5 @@ pub enum GpassError {
     #[msg("Invalid last burned value")]
     InvalidLastBurnedValue, // 6009
     #[msg("Burn period not yet passed")]
-    PeriodNotPassed, // 60010
+    PeriodNotPassed, // 6010
 }
