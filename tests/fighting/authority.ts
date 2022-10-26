@@ -21,7 +21,7 @@ describe("Fighting authority tests", () => {
   let fixture: FightingTestFixture = null;
   before(async () => {
     fixture = await prepareFightingTestFixture(fighting, gpass, rewardDistribution, freezing);
-    await fighting.methods.initialize(fixture.updateAuth.publicKey, new anchor.BN(100), 100, 200, 8)
+    await fighting.methods.initialize(fixture.updateAuth.publicKey, fixture.fighting.validator.publicKey, new anchor.BN(100), 100, 200, 8)
       .accounts({
         admin: fixture.admin.publicKey,
         fightingSettings: fixture.fighting.settings.publicKey,
@@ -241,5 +241,40 @@ describe("Fighting authority tests", () => {
 
     const fightingSettingsData = await fighting.account.fightingSettings.fetch(fixture.fighting.settings.publicKey);
     assert.equal(fightingSettingsData.royalty, newRoyalty);
+  });
+
+  it("update validator with invalid authority", async () => {
+    const invalidUpdateAuth = Keypair.generate();
+    const newValidator = Keypair.generate();
+    await utils.airdropSol(fighting.provider.connection, invalidUpdateAuth.publicKey, 1 * LAMPORTS_PER_SOL);
+    await assert.rejects(fighting.methods.updateValidator(newValidator.publicKey)
+      .accounts({
+        authority: invalidUpdateAuth.publicKey,
+        fightingSettings: fixture.fighting.settings.publicKey,
+      })
+      .signers([invalidUpdateAuth])
+      .rpc(),
+      (e: AnchorError) => {
+        assert.ok(e.error !== undefined);
+        assert.strictEqual(e.error.errorCode.code, "AccessDenied");
+        assert.strictEqual(e.error.errorCode.number, 6000);
+        assert.strictEqual(e.error.errorMessage, "Access denied");
+        return true;
+      }
+    );
+  });
+
+  it("update validator", async () => {
+    const newValidator = Keypair.generate();
+    await fighting.methods.updateValidator(newValidator.publicKey)
+      .accounts({
+        authority: newUpdAuthority.publicKey,
+        fightingSettings: fixture.fighting.settings.publicKey,
+      })
+      .signers([newUpdAuthority])
+      .rpc();
+
+    const fightingSettingsData = await fighting.account.fightingSettings.fetch(fixture.fighting.settings.publicKey);
+    assert.ok(fightingSettingsData.validator.equals(newValidator.publicKey));
   });
 });

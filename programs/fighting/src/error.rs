@@ -27,4 +27,6 @@ pub enum FightingError {
     InvalidActionsLogSize, // 6007
     #[msg("Invalid play to earn fund address")]
     InvalidPlayToEarnFundAddress, // 6008
+    #[msg("Invalid validator")]
+    InvalidValidator, // 6009
 }

@@ -18,6 +18,7 @@ export class FightingTestFixture {
 
   fighting: {
     settings: Keypair;
+    validator: Keypair;
     gpassInfo: Keypair;
     freezingInfo: Keypair;
     freezingTreasury: PublicKey;
@@ -52,10 +53,12 @@ export async function prepareFightingTestFixture(
   const admin = Keypair.generate();
   const updateAuth = Keypair.generate();
   const user = Keypair.generate();
+  const validator = Keypair.generate();
 
   await utils.airdropSol(fighting.provider.connection, admin.publicKey, 200_000_000_000);
   await utils.airdropSol(fighting.provider.connection, user.publicKey, 200_000_000_000);
   await utils.airdropSol(fighting.provider.connection, updateAuth.publicKey, 200_000_000_000);
+  await utils.airdropSol(fighting.provider.connection, validator.publicKey, 200_000_000_000);
 
   const gpassInfo = Keypair.generate();
   const fightingSettings = Keypair.generate();
@@ -222,6 +225,7 @@ export async function prepareFightingTestFixture(
 
     fighting: {
       settings: fightingSettings,
+      validator: validator,
       gpassInfo: gpassInfo,
       freezingInfo: freezingInfo,
       freezingTreasury: freezingTreasury,

@@ -14,6 +14,7 @@ pub struct FightingSettings {
     pub admin: Pubkey,
     pub update_auth: Pubkey,
 
+    pub validator: Pubkey,
     pub afk_timeout: i64,
     pub gpass_daily_reward_coefficient: u32,
     pub reward_coefficient: u32,
@@ -26,6 +27,7 @@ impl FightingSettings {
     pub const LEN: usize = DESCRIMINATOR_LEN +
         32 + // admin pk
         32 + // update auth pk
+        32 + // validator pk
         8 + // AFK timeout
         4 + // gpass daily reward coefficient
         4 + // reward coefficient
@@ -104,7 +106,7 @@ impl Default for Identity {
 #[repr(u8)]
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, PartialEq)]
 pub enum Action {
-    None,
+    None = 1,
     // Arm hits
     ArmShort,
     ArmLong,
@@ -185,11 +187,11 @@ const ACTIONS_VEC_LEN_MAX: usize = (Action::LEN + Identity::LEN) * ACTIONS_VEC_M
 #[account]
 #[derive(Default, Debug)]
 pub struct GameInfo {
-    pub id: u64,
+    pub id: u32,
     pub result: GameResult,
     pub actions_log: Vec<IdentityAction>,
 }
 
 impl GameInfo {
-    pub const LEN: usize = DESCRIMINATOR_LEN + 8 + GameResult::LEN + ACTIONS_VEC_LEN_MAX;
+    pub const LEN: usize = DESCRIMINATOR_LEN + 4 + GameResult::LEN + ACTIONS_VEC_LEN_MAX;
 }
