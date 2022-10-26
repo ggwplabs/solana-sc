@@ -7,6 +7,7 @@ pub const CMD_UPDATE_ADMIN: &str = "update-admin";
 pub const CMD_SET_UPDATE_AUTHORITY: &str = "set-update-authority";
 pub const CMD_UPDATE_AFK_TIMEOUT: &str = "update-afk-timeout";
 pub const CMD_SHOW_SETTINGS: &str = "show-settings";
+pub const CMD_UPDATE_VALIDATOR: &str = "update-validator";
 pub const CMD_SHOW_GAME_INFO: &str = "show-game-info";
 pub const CMD_SHOW_USER_INFO: &str = "show-user-info";
 
@@ -24,6 +25,14 @@ pub fn get_fighting_commands<'a, 'b>() -> App<'a, 'b> {
                         .required(true)
                         .takes_value(true)
                         .help("The fighting info update authority pubkey."),
+                )
+                .arg(
+                    Arg::with_name("validator")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The validator pubkey."),
                 )
                 .arg(
                     Arg::with_name("gpass_info")
@@ -127,6 +136,26 @@ pub fn get_fighting_commands<'a, 'b>() -> App<'a, 'b> {
                         .required(true)
                         .takes_value(true)
                         .help("The new AFK timeout in seconds."),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name(CMD_UPDATE_VALIDATOR)
+                .about("Update authority can set the new validator pk.")
+                .arg(
+                    Arg::with_name("fighting_settings")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The fighting settings account address."),
+                )
+                .arg(
+                    Arg::with_name("validator")
+                        .value_name("PUBKEY")
+                        .validator(is_valid_pubkey)
+                        .required(true)
+                        .takes_value(true)
+                        .help("The validator PK."),
                 ),
         )
         .subcommand(

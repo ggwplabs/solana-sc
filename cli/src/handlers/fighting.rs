@@ -22,6 +22,7 @@ pub fn handle(
         (commands::fighting::CMD_INITIALIZE, Some(arg_matches)) => {
             println!("Commad initialize");
             let update_auth = value_t_or_exit!(arg_matches, "update_auth", Pubkey);
+            let validator = value_t_or_exit!(arg_matches, "validator", Pubkey);
             let gpass_info = value_t_or_exit!(arg_matches, "gpass_info", Pubkey);
             let reward_distribution_info =
                 value_t_or_exit!(arg_matches, "reward_distribution_info", Pubkey);
@@ -34,6 +35,7 @@ pub fn handle(
             cmd_initialize(
                 &program,
                 update_auth,
+                validator,
                 gpass_info,
                 reward_distribution_info,
                 afk_timeout,
@@ -72,6 +74,17 @@ pub fn handle(
 
             cmd_update_afk_timeout(&program, fighting_settings, afk_timeout)
                 .expect("Update afk timeout error");
+
+            println!("Successful");
+            Ok(())
+        }
+
+        (commands::fighting::CMD_UPDATE_VALIDATOR, Some(arg_matches)) => {
+            let fighting_settings = value_t_or_exit!(arg_matches, "fighting_settings", Pubkey);
+            let validator = value_t_or_exit!(arg_matches, "validator", Pubkey);
+
+            cmd_update_validator(&program, fighting_settings, validator)
+                .expect("Update validator error");
 
             println!("Successful");
             Ok(())
@@ -139,6 +152,7 @@ pub fn handle(
 fn cmd_initialize(
     program: &Program,
     update_auth: Pubkey,
+    validator: Pubkey,
     gpass_info: Pubkey,
     reward_distribution_info: Pubkey,
     afk_timeout: i64,
@@ -184,6 +198,7 @@ fn cmd_initialize(
             system_program: system_program::ID,
         })
         .args(fighting::instruction::Initialize {
+            validator: validator,
             update_auth: update_auth,
             afk_timeout: afk_timeout,
             royalty: royalty,
@@ -245,6 +260,25 @@ fn cmd_update_afk_timeout(
         })
         .args(fighting::instruction::UpdateAfkTimeout {
             afk_timeout: afk_timeout,
+        })
+        .send()?;
+
+    Ok(())
+}
+
+fn cmd_update_validator(
+    program: &Program,
+    fighting_settings: Pubkey,
+    validator: Pubkey,
+) -> Result<(), ClientError> {
+    program
+        .request()
+        .accounts(fighting::accounts::UpdateSetting {
+            authority: program.payer(),
+            fighting_settings: fighting_settings,
+        })
+        .args(fighting::instruction::UpdateValidator {
+            validator: validator,
         })
         .send()?;
 

@@ -16,6 +16,7 @@ use gpass::state::GpassInfo;
 use spl_token::amount_to_ui_amount;
 use spl_token::state::Mint;
 use staking::state::{StakingInfo, STAKING_FUND_AUTH_SEED};
+use std::str::FromStr;
 
 pub fn handle(
     cmd_matches: &ArgMatches,
@@ -418,6 +419,7 @@ pub fn cmd_init_all(
         })
         .args(fighting::instruction::Initialize {
             update_auth: update_auth,
+            validator: params.fighting.validator,
             afk_timeout: params.fighting.afk_timeout,
             royalty: params.fighting.royalty,
             reward_coefficient: params.fighting.reward_coefficient,
@@ -486,6 +488,7 @@ pub struct StakingParams {
 
 #[derive(Debug)]
 pub struct FightingParams {
+    pub validator: Pubkey,
     pub afk_timeout: i64,
     pub royalty: u8,
     pub reward_coefficient: u32,
@@ -522,6 +525,8 @@ impl ProgramsParams {
                     apr_end: 5,
                 },
                 fighting: FightingParams {
+                    validator: Pubkey::from_str("Bf2MP46M6y6nWqEw13Gd4vWG8qK4DqB1yrd1qoftjUuv")
+                        .expect("Validator PK err"),
                     afk_timeout: 1 * 60 * 60,
                     royalty: 8,
                     reward_coefficient: 20000,
@@ -555,6 +560,8 @@ impl ProgramsParams {
                     apr_end: 5,
                 },
                 fighting: FightingParams {
+                    validator: Pubkey::from_str("Bf2MP46M6y6nWqEw13Gd4vWG8qK4DqB1yrd1qoftjUuv")
+                        .expect("Validator PK err"),
                     afk_timeout: 1 * 60 * 60,
                     royalty: 8,
                     reward_coefficient: 20000,
@@ -588,6 +595,8 @@ impl ProgramsParams {
                     apr_end: 5,
                 },
                 fighting: FightingParams {
+                    validator: Pubkey::from_str("Bf2MP46M6y6nWqEw13Gd4vWG8qK4DqB1yrd1qoftjUuv")
+                        .expect("Validator PK err"),
                     afk_timeout: 1 * 60 * 60,
                     royalty: 8,
                     reward_coefficient: 20000,

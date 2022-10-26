@@ -20,6 +20,7 @@ pub mod fighting {
     pub fn initialize(
         ctx: Context<Initialize>,
         update_auth: Pubkey,
+        validator: Pubkey,
         afk_timeout: i64,
         reward_coefficient: u32,
         gpass_daily_reward_coefficient: u32,
@@ -30,6 +31,7 @@ pub mod fighting {
         let fighting_settings = &mut ctx.accounts.fighting_settings;
         fighting_settings.admin = ctx.accounts.admin.key();
         fighting_settings.update_auth = update_auth;
+        fighting_settings.validator = validator;
         fighting_settings.afk_timeout = afk_timeout;
         fighting_settings.reward_coefficient = reward_coefficient;
         fighting_settings.gpass_daily_reward_coefficient = gpass_daily_reward_coefficient;
@@ -64,6 +66,20 @@ pub mod fighting {
         );
 
         fighting_settings.update_auth = update_auth;
+
+        Ok(())
+    }
+
+    /// Update auth can set the new validator pubkey.
+    pub fn update_validator(ctx: Context<UpdateSetting>, validator: Pubkey) -> Result<()> {
+        let fighting_settings = &mut ctx.accounts.fighting_settings;
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            fighting_settings.update_auth,
+            FightingError::AccessDenied
+        );
+
+        fighting_settings.validator = validator;
 
         Ok(())
     }
@@ -191,7 +207,7 @@ pub mod fighting {
     /// User finalize the game. Fee payer: GGWP system account.
     pub fn finalize_game(
         ctx: Context<FinalizeGame>,
-        game_id: u64,
+        game_id: u32,
         game_result: GameResult,
         actions_log: Vec<IdentityAction>,
     ) -> Result<()> {

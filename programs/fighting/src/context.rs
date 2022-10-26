@@ -94,13 +94,16 @@ pub struct StartGame<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-    game_id: u64,
+    game_id: u32,
     game_result: GameResult,
     actions_log: Vec<(Identity, Action)>,
 )]
 pub struct FinalizeGame<'info> {
     pub user: Signer<'info>,
-    #[account(mut)]
+    #[account(mut,
+        constraint = validator.key() == fighting_settings.validator
+        @FightingError::InvalidValidator,
+    )]
     pub validator: Signer<'info>,
 
     #[account(init, payer = validator, space = GameInfo::LEN,
