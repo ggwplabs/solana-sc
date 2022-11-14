@@ -325,7 +325,7 @@ pub mod staking {
                 token_program.to_account_info(),
                 Transfer {
                     from: staking_fund.to_account_info(),
-                    to: accumulative_fund.to_account_info(),
+                    to: user_ggwp_wallet.to_account_info(),
                     authority: staking_fund_auth.to_account_info(),
                 },
                 staking_fund_auth_signer,
